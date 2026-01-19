@@ -30,23 +30,25 @@ lazy_static! {
     pub static ref OPENGL_CONTEXT: OpenGlContext = OpenGlContext::new();
     pub static ref DIAGNOSTICS_REGEX: Regex = {
         match OPENGL_CONTEXT.vendor().as_str() {
-            "NVIDIA Corporation" => {
-                Regex::new(r"^(?P<filepath>\d+)\((?P<linenum>\d+)\) : (?P<severity>error|warning) [A-C]\d+: (?P<output>.+)").unwrap()
-            }
+            "NVIDIA Corporation" => Regex::new(
+                r"^(?P<filepath>\d+)\((?P<linenum>\d+)\) : (?P<severity>error|warning) [A-C]\d+: (?P<output>.+)"
+            ),
+            #[cfg(target_os = "linux")]
+            "AMD" => Regex::new( // We assume RadeonSI.
+                r"^(?P<filepath>\d+)\:(?P<linenum>\d+)\(\d+\): (?P<severity>error|warning): (?P<output>.+)"
+            ),
             _ => Regex::new(
                 r#"^(?P<severity>ERROR|WARNING): (?P<filepath>[^?<>*|"\n]+):(?P<linenum>\d+): (?:'.*' :|[a-z]+\(#\d+\)) +(?P<output>.+)$"#,
-            )
-            .unwrap(),
-        }
+            ),
+        }.unwrap()
     };
 }
 
 pub const OPTIFINE_MACROS: &str = "#define MC_VERSION 11900
 #define MC_GL_VERSION 320
 #define MC_GLSL_VERSION 150
-#define MC_OS_WINDOWS
-#define MC_GL_VENDOR_NVIDIA
-#define MC_GL_RENDERER_GEFORCE
+#define MC_GL_VENDOR_OTHER
+#define MC_GL_RENDERER_OTHER
 #define MC_NORMAL_MAP
 #define MC_SPECULAR_MAP
 #define MC_RENDER_QUALITY 1.0
@@ -91,5 +93,13 @@ pub const OPTIFINE_MACROS: &str = "#define MC_VERSION 11900
 #define DH_BLOCK_WATER 12
 #define DH_BLOCK_GRASS 13
 #define DH_BLOCK_AIR 14
-#define DH_BLOCK_ILLUMINATED 15
-";
+#define DH_BLOCK_ILLUMINATED 15\n";
+
+#[cfg(target_os = "linux")]
+pub const IRIS_OS_MACRO: &str = "#define MC_OS_LINUX\n";
+
+#[cfg(target_os = "windows")]
+pub const IRIS_OS_MACRO: &str = "#define MC_OS_WINDOWS\n";
+
+#[cfg(target_os = "macos")]
+pub const IRIS_OS_MACRO: &str = "#define MC_OS_MAC\n";

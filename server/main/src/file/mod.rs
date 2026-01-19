@@ -210,6 +210,7 @@ pub fn preprocess_shader(shader_content: &mut String, mut version: String, is_de
 
     if !is_debug {
         version += OPTIFINE_MACROS;
+        version += IRIS_OS_MACRO;
     }
     version += shader_content;
     *shader_content = version;

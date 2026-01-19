@@ -44,7 +44,8 @@ lazy_static! {
     };
 }
 
-pub const IRIS_COMMON_MACROS: &str = "#define MC_VERSION 12111
+pub const IRIS_COMMON_MACROS: &str = "#define IS_LSP_MCSHADER
+#define MC_VERSION 12111
 #define IS_IRIS
 #define IRIS_HAS_TRANSLUCENCY_SORTING
 #define IRIS_TAG_SUPPORT

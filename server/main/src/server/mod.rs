@@ -126,7 +126,18 @@ impl LanguageServer for MinecraftLanguageServer {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         info!("Starting server...");
 
+        assert!(
+            params
+                .capabilities
+                .general
+                .unwrap()
+                .position_encodings
+                .unwrap()
+                .contains(&PositionEncodingKind::UTF16)
+        );
+
         let initialize_result = ServerCapabilitiesFactroy::initial_capabilities();
+        // initialize_result.capabilities.position_encoding = Some(PositionEncodingKind::UTF16);
 
         let roots: Vec<PathBuf> = if let Some(workspaces) = params.workspace_folders {
             workspaces

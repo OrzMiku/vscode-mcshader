@@ -4,7 +4,7 @@ use std::{
     cell::RefCell,
     ffi::OsString,
     fs::read_to_string,
-    path::{Component, Path, PathBuf, MAIN_SEPARATOR_STR},
+    path::{Component, MAIN_SEPARATOR_STR, Path, PathBuf},
     rc::Rc,
 };
 
@@ -89,6 +89,20 @@ pub fn generate_line_mapping(content: &str) -> Vec<usize> {
     });
     line_mapping.push(content.len() + 1);
     line_mapping
+
+    /*
+        // content.lines().for_each(|line| line.char_indices());
+
+        let mut line_mapping = vec![0];
+        content.match_indices('\n').for_each(|(index, _)| {
+            line_mapping.push(content.char_indices().nth(index + 1).map(|(offset, _)| offset).unwrap_or({
+                let last_char = content.char_indices().nth(index).unwrap();
+                last_char.0 + last_char.1.len_utf8()
+            }));
+        });
+        // line_mapping.push(content.char_indices().last().unwrap().0 + 2);
+        line_mapping
+    */
 }
 
 fn push_str_without_ignored(
@@ -112,28 +126,32 @@ fn push_str_without_ignored(
 }
 
 fn byte_offset(content: &str, chars: usize) -> usize {
-    let mut iter = content.as_bytes().iter();
-    let mut index = chars;
-    for _ in 0..chars {
-        let x = match iter.next() {
-            Some(x) => *x,
-            None => break,
-        };
-        if x < 128 {
-            continue;
-        }
-        iter.next();
-        index += 1;
-        if x >= 0xE0 {
+    /*
+        let mut iter = content.as_bytes().iter();
+        let mut index = chars;
+        for _ in 0..chars {
+            let x = match iter.next() {
+                Some(x) => *x,
+                None => break,
+            };
+            if x < 128 {
+                continue;
+            }
             iter.next();
             index += 1;
-            if x >= 0xF0 {
+            if x >= 0xE0 {
                 iter.next();
                 index += 1;
+                if x >= 0xF0 {
+                    iter.next();
+                    index += 1;
+                }
             }
         }
-    }
-    index
+        index
+    */
+    // content.char_indices().nth(chars).unwrap().0 // UTF-8
+    content[..chars].encode_utf16().count()
 }
 
 /// Byte index generated from char index
@@ -228,9 +246,7 @@ pub trait ShaderFile {
         let mut new_content = String::new();
 
         unsafe {
-            changes.sort_by(|a, b| {
-                a.range.unwrap().start.cmp(&b.range.unwrap().start)
-            });
+            changes.sort_by(|a, b| a.range.unwrap().start.cmp(&b.range.unwrap().start));
             changes.iter().for_each(|change| {
                 let range = change.range.unwrap();
 

@@ -26,7 +26,7 @@ impl ServerCapabilitiesFactroy {
                                 FileOperationFilter {
                                     scheme: Some("file".to_owned()),
                                     pattern: FileOperationPattern {
-                                        glob: "**/*.{vsh,gsh,fsh,csh,glsl}".to_owned(),
+                                        glob: "**/*.{csh,vsh,gsh,fsh,csh,tcs,tes,glsl}".to_owned(),
                                         matches: Some(FileOperationPatternKind::File),
                                         options: None,
                                     },

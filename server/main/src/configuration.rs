@@ -6,9 +6,9 @@ use tower_lsp::lsp_types::*;
 #[derive(Deserialize)]
 pub struct Configuration {
     #[serde(alias = "logLevel")]
-    pub log_level: String,
+    pub log_level: Box<str>,
     #[serde(alias = "extraExtension")]
-    pub extra_extension: HashSet<String>,
+    pub extra_extension: HashSet<Box<str>>,
     #[serde(alias = "tempLint")]
     pub temp_lint: bool,
 }
@@ -20,7 +20,7 @@ impl Configuration {
 
     pub fn generate_file_watch_registration(&self) -> Vec<Registration> {
         let mut glsl_file_pattern = "**/*.{vsh,gsh,fsh,csh,glsl".to_owned();
-        let mut folder_pattern = "**/shaders/**/*[!{.vsh,.gsh,.fsh,.csh,.glsl".to_owned();
+        let mut folder_pattern = "**/shaders/**/*[!{.csh,.vsh,.gsh,.fsh,.tcs,.tes,.glsl".to_owned();
         self.extra_extension.iter().for_each(|extension| {
             glsl_file_pattern += ",";
             folder_pattern += ",.";

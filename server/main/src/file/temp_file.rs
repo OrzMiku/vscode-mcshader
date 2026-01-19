@@ -8,11 +8,13 @@ impl TempFile {
     pub fn new(parser: &mut Parser, file_path: &Path, content: String) -> Self {
         warn!("Document not found in file system"; "path" => file_path.to_str().unwrap());
         let mut file_type = match file_path.extension() {
+            Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
             Some(ext) if ext == "vsh" => gl::VERTEX_SHADER,
             Some(ext) if ext == "gsh" => gl::GEOMETRY_SHADER,
             Some(ext) if ext == "fsh" => gl::FRAGMENT_SHADER,
-            Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
-            _ => gl::NONE,
+            Some(ext) if ext == "tcs" => gl::TESS_CONTROL_SHADER,
+            Some(ext) if ext == "tes" => gl::TESS_EVALUATION_SHADER,
+            _ => unreachable!(),
         };
 
         let mut buffer = file_path.components();

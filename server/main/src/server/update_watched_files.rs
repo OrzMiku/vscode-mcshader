@@ -25,9 +25,7 @@ impl MinecraftLanguageServer {
         for (file_path, change_type) in change_list {
             if change_type == FileChangeType::DELETED {
                 // If a path is not watched through extension, it might be a folder
-                let is_watched_file = file_path
-                    .extension()
-                    .is_some_and(|ext| extensions.contains(ext.to_str().unwrap()));
+                let is_watched_file = file_path.extension().is_some_and(|ext| extensions.contains(ext.to_str().unwrap()));
                 // Folder handling is much more expensive than file handling
                 // Almost nobody will name a folder with watched extension, right?
                 if is_watched_file {
@@ -64,12 +62,14 @@ impl MinecraftLanguageServer {
             } else {
                 let is_valid_shader = self.is_valid_shader(&shader_packs, &file_path).map(|pack_path| {
                     let shader_type = match file_path.extension() {
+                        Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
                         Some(ext) if ext == "vsh" => gl::VERTEX_SHADER,
                         Some(ext) if ext == "gsh" => gl::GEOMETRY_SHADER,
                         Some(ext) if ext == "fsh" => gl::FRAGMENT_SHADER,
-                        Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
+                        Some(ext) if ext == "tcs" => gl::TESS_CONTROL_SHADER,
+                        Some(ext) if ext == "tes" => gl::TESS_EVALUATION_SHADER,
                         // This will never be used since we have ensured the extension through basic shaders regex.
-                        _ => gl::NONE,
+                        _ => unreachable!(),
                     };
                     (pack_path, shader_type)
                 });

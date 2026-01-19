@@ -42,7 +42,7 @@ pub type Diagnostics = HashMap<Url, Vec<Diagnostic>>;
 /// By sending the Mutex of server data to snyc functions, we can handle it like single thread
 pub struct ServerData {
     temp_lint: RefCell<bool>,
-    extensions: RefCell<HashSet<String>>,
+    extensions: RefCell<HashSet<Box<str>>>,
     shader_packs: RefCell<HashSet<Rc<ShaderPack>>>,
     workspace_files: RefCell<HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>>,
     temp_files: RefCell<HashMap<PathBuf, TempFile>>,

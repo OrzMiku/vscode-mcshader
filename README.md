@@ -19,7 +19,7 @@ Work spaces support idea from Fayer3
  - Multiple work space or multiple shader folders in one work space;
  - Temporary linting and document link for files outside work space (temporary linting only supports base shader file);
  - Virtual merge for base shader file;
- - File watcher for file changes (creating, deleting, etc). Defaultly supports file with `[vsh, gsh, fsh, csh, glsl, inc]` extensions, you can add more by extension configuration;
+ - File watcher for file changes (creating, deleting, etc). By default it supports files with `[csh, vsh, gsh, fsh, tcs, tes, glsl]` and `inc` (extra) extensions, you can add more by extension configuration;
  - Single-file goto-definitions and references;
  - Document symbols provider;
  - Workspace edits for include macro when renaming files.

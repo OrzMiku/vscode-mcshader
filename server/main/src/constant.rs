@@ -6,17 +6,19 @@ use crate::commands::*;
 use crate::opengl::OpenGlContext;
 
 lazy_static! {
-    pub static ref BASIC_EXTENSIONS: HashSet<String> = {
+    pub static ref BASIC_EXTENSIONS: HashSet<Box<str>> = {
         HashSet::from([
-            "vsh".to_owned(),
-            "gsh".to_owned(),
-            "fsh".to_owned(),
-            "csh".to_owned(),
-            "glsl".to_owned(),
+            Box::from("csh"),
+            Box::from("vsh"),
+            Box::from("gsh"),
+            Box::from("fsh"),
+            Box::from("tcs"),
+            Box::from("tes"),
+            Box::from("glsl"),
         ])
     };
     pub static ref RE_BASIC_SHADERS: Regex = Regex::new(
-        r"^(dh_(terrain|water|shadow)|shadow|gbuffers_(armor_glint|basic|beaconbeam|block|clouds|damagedblock|entities|entities_glowing|hand|hand_water|line|skybasic|skytextured|spidereyes|terrain|textured|textured_lit|water|weather)).(vsh|gsh|fsh)|(final|(shadowcomp|prepare|deferred|composite)([1-9]\d?)?)(.vsh|.gsh|.fsh|(_[a-z])?.csh)$"
+        r"^(dh_(terrain|water|shadow)|shadow(|_solid|_cutout|_water|_entities|_block)|gbuffers_(armor_glint|basic|beaconbeam|block|clouds|damagedblock|entities|entities_glowing|hand|hand_water|line|skybasic|skytextured|spidereyes|terrain|textured|textured_lit|water|weather|particles|particles_translucent|block_translucent|entities_translucent|terrain_solid|terrain_cutout|lightning)).(vsh|gsh|fsh|tcs|tes)|setup.csh|(final|(begin|shadowcomp|prepare|deferred|composite)([1-9]\d?)?)(.vsh|.gsh|.fsh|(_[a-z])?.csh)$"
     ).unwrap();
     pub static ref COMMAND_LIST: HashMap<&'static str, Box<dyn Command + Sync + Send>> =
         HashMap::from([("virtualMerge", Box::new(VirtualMerge {}) as Box<dyn Command + Sync + Send>)])

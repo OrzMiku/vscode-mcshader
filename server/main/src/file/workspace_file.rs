@@ -218,12 +218,14 @@ impl WorkspaceFile {
         pack_path: &Rc<ShaderPack>, file_path: PathBuf,
     ) {
         let file_type = match file_path.extension() {
+            Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
             Some(ext) if ext == "vsh" => gl::VERTEX_SHADER,
             Some(ext) if ext == "gsh" => gl::GEOMETRY_SHADER,
             Some(ext) if ext == "fsh" => gl::FRAGMENT_SHADER,
-            Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
+            Some(ext) if ext == "tcs" => gl::TESS_CONTROL_SHADER,
+            Some(ext) if ext == "tes" => gl::TESS_EVALUATION_SHADER,
             // This will never be used since we have ensured the extension through basic shaders regex.
-            _ => gl::NONE,
+            _ => unreachable!(),
         };
         let (file_path, workspace_file) = if let Some((file_path, workspace_file)) = workspace_files.get_key_value(&file_path) {
             // Existing as some file's include

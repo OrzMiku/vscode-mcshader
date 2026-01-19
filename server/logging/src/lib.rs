@@ -3,8 +3,8 @@ use slog_term::{FullFormat, PlainSyncDecorator};
 use std::cell::RefCell;
 
 use std::io::Stderr;
+use std::sync::LazyLock;
 
-use lazy_static::lazy_static;
 use slog::*;
 use slog_atomic::*;
 
@@ -47,11 +47,9 @@ thread_local! {
     static CURRENT_RNG: RefCell<rngs::ThreadRng> = RefCell::new(rngs::ThreadRng::default());
 }
 
-lazy_static! {
-    static ref DRAIN_SWITCH: AtomicSwitch<()> = AtomicSwitch::new(&*DEBUG_DRAIN);
-    static ref TRACE_DRAIN: LoggerBase = logger_base(Level::Trace);
-    static ref DEBUG_DRAIN: LoggerBase = logger_base(Level::Debug);
-    static ref INFO_DRAIN: LoggerBase = logger_base(Level::Info);
-    static ref WARN_DRAIN: LoggerBase = logger_base(Level::Warning);
-    static ref ERROR_DRAIN: LoggerBase = logger_base(Level::Error);
-}
+static DRAIN_SWITCH: LazyLock<AtomicSwitch<()>> = LazyLock::new(|| AtomicSwitch::new(&*DEBUG_DRAIN));
+static TRACE_DRAIN: LazyLock<LoggerBase> = LazyLock::new(|| logger_base(Level::Trace));
+static DEBUG_DRAIN: LazyLock<LoggerBase> = LazyLock::new(|| logger_base(Level::Debug));
+static INFO_DRAIN: LazyLock<LoggerBase> = LazyLock::new(|| logger_base(Level::Info));
+static WARN_DRAIN: LazyLock<LoggerBase> = LazyLock::new(|| logger_base(Level::Warning));
+static ERROR_DRAIN: LazyLock<LoggerBase> = LazyLock::new(|| logger_base(Level::Error));

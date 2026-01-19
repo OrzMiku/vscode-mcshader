@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use super::*;
 
 const SYMBOLS_QUERY_STR: &str = r#"
@@ -40,9 +42,7 @@ const SYMBOLS_QUERY_STR: &str = r#"
                  ])) @field_list)
 "#;
 
-lazy_static! {
-    static ref SYMBOLS_QUERY: Query = Query::new(&tree_sitter_glsl::LANGUAGE_GLSL.into(), SYMBOLS_QUERY_STR).unwrap();
-}
+static SYMBOLS_QUERY: LazyLock<Query> = LazyLock::new(|| Query::new(&tree_sitter_glsl::LANGUAGE_GLSL.into(), SYMBOLS_QUERY_STR).unwrap());
 
 // This does not need unsafe code to create another reference
 fn insert_child_symbol(parent_list: &mut Vec<DocumentSymbol>, symbol: DocumentSymbol) {

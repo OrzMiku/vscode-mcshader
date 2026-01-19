@@ -1,50 +1,54 @@
+use std::sync::LazyLock;
+
 use hashbrown::{HashMap, HashSet};
-use lazy_static::lazy_static;
 use regex::Regex;
 
 use crate::commands::*;
 use crate::opengl::OpenGlContext;
 
-lazy_static! {
-    pub static ref BASIC_EXTENSIONS: HashSet<Box<str>> = {
-        HashSet::from([
-            Box::from("csh"),
-            Box::from("vsh"),
-            Box::from("gsh"),
-            Box::from("fsh"),
-            Box::from("tcs"),
-            Box::from("tes"),
-            Box::from("glsl"),
-        ])
-    };
-    pub static ref RE_BASIC_SHADERS: Regex = Regex::new(
-        r"^(dh_(terrain|water|shadow)|shadow(|_solid|_cutout|_water|_entities|_block)|gbuffers_(armor_glint|basic|beaconbeam|block|clouds|damagedblock|entities|entities_glowing|hand|hand_water|line|skybasic|skytextured|spidereyes|terrain|textured|textured_lit|water|weather|particles|particles_translucent|block_translucent|entities_translucent|terrain_solid|terrain_cutout|lightning)).(vsh|gsh|fsh|tcs|tes)|setup.csh|(final|(begin|shadowcomp|prepare|deferred|composite)([1-9]\d?)?)(.vsh|.gsh|.fsh|(_[a-z])?.csh)$"
-    ).unwrap();
-    pub static ref COMMAND_LIST: HashMap<&'static str, Box<dyn Command + Sync + Send>> =
-        HashMap::from([("virtualMerge", Box::new(VirtualMerge {}) as Box<dyn Command + Sync + Send>)])
-    ;
-    pub static ref RE_DIMENSION_FOLDER: Regex = Regex::new(r"^world-?\d+$").unwrap();
-    pub static ref RE_MACRO_PARSER_MULTI_LINE: Regex = Regex::new(r#"(?m)^[ \f\t\v]*#\s*((include|moj_import)\s+[<"](.+)[>"]|line|version).?$"#).unwrap();
-    pub static ref RE_MACRO_PARSER: Regex = Regex::new(r#"^\s*#\s*(include\s+"(.+)"|line|version)"#).unwrap();
-    pub static ref RE_MACRO_PARSER_TEMP: Regex = Regex::new(r#"^\s*#\s*((include|moj_import)\s+[<"](.+)[>"]|line|version)"#).unwrap();
-    pub static ref RE_MACRO_VERSION: Regex = Regex::new(r"^[ \f\t\v]*#\s*version[ \f\t\v]+(\d+)([ \f\t\v]+[a-z]+)?").unwrap();
-    pub static ref RE_COMMENT: Regex = Regex::new(r"/[/*]|\*/|\\\r?$").unwrap();
-    pub static ref OPENGL_CONTEXT: OpenGlContext = OpenGlContext::new();
-    pub static ref DIAGNOSTICS_REGEX: Regex = {
-        match OPENGL_CONTEXT.vendor() {
-            "NVIDIA Corporation" => Regex::new(
-                r"^(?P<filepath>\d+)\((?P<linenum>\d+)\) : (?P<severity>error|warning) [A-C]\d+: (?P<output>.+)"
-            ),
-            #[cfg(target_os = "linux")]
-            "AMD" => Regex::new( // We assume RadeonSI.
-                r"^(?P<filepath>\d+)\:(?P<linenum>\d+)\(\d+\): (?P<severity>error|warning): (?P<output>.+)"
-            ),
-            _ => Regex::new(
-                r#"^(?P<severity>ERROR|WARNING): (?P<filepath>[^?<>*|"\n]+):(?P<linenum>\d+): (?:'.*' :|[a-z]+\(#\d+\)) +(?P<output>.+)$"#,
-            ),
-        }.unwrap()
-    };
-}
+pub static BASIC_EXTENSIONS: LazyLock<HashSet<Box<str>>> = LazyLock::new(|| {
+    HashSet::from([
+        Box::from("csh"),
+        Box::from("vsh"),
+        Box::from("gsh"),
+        Box::from("fsh"),
+        Box::from("tcs"),
+        Box::from("tes"),
+        Box::from("glsl"),
+    ])
+});
+pub static RE_BASIC_SHADERS: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+    r"^(dh_(terrain|water|shadow)|shadow(|_solid|_cutout|_water|_entities|_block)|gbuffers_(armor_glint|basic|beaconbeam|block|clouds|damagedblock|entities|entities_glowing|hand|hand_water|line|skybasic|skytextured|spidereyes|terrain|textured|textured_lit|water|weather|particles|particles_translucent|block_translucent|entities_translucent|terrain_solid|terrain_cutout|lightning)).(vsh|gsh|fsh|tcs|tes)|setup.csh|(final|(begin|shadowcomp|prepare|deferred|composite)([1-9]\d?)?)(.vsh|.gsh|.fsh|(_[a-z])?.csh)$"
+).unwrap()
+});
+pub static COMMAND_LIST: LazyLock<HashMap<&'static str, Box<dyn Command + Sync + Send>>> =
+    LazyLock::new(|| HashMap::from([("virtualMerge", Box::new(VirtualMerge {}) as Box<dyn Command + Sync + Send>)]));
+pub static RE_DIMENSION_FOLDER: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^world-?\d+$").unwrap());
+// pub static RE_MACRO_PARSER_MULTI_LINE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(?m)^[ \f\t\v]*#\s*((include|moj_import)\s+[<"](.+)[>"]|line|version).?$"#).unwrap());
+pub static RE_MACRO_PARSER: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^\s*#\s*(include\s+"(.+)"|line|version)"#).unwrap());
+pub static RE_MACRO_PARSER_TEMP: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"^\s*#\s*((include|moj_import)\s+[<"](.+)[>"]|line|version)"#).unwrap());
+pub static RE_MACRO_VERSION: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[ \f\t\v]*#\s*version[ \f\t\v]+(\d+)([ \f\t\v]+[a-z]+)?").unwrap());
+pub static RE_COMMENT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"/[/*]|\*/|\\\r?$").unwrap());
+pub static OPENGL_CONTEXT: LazyLock<OpenGlContext> = LazyLock::new(OpenGlContext::new);
+pub static DIAGNOSTICS_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    match OPENGL_CONTEXT.vendor() {
+        "NVIDIA Corporation" => {
+            Regex::new(r"^(?P<filepath>\d+)\((?P<linenum>\d+)\) : (?P<severity>error|warning) [A-C]\d+: (?P<output>.+)")
+        }
+        #[cfg(target_os = "linux")]
+        "AMD" => Regex::new(
+            // We assume RadeonSI.
+            r"^(?P<filepath>\d+)\:(?P<linenum>\d+)\(\d+\): (?P<severity>error|warning): (?P<output>.+)",
+        ),
+        _ => Regex::new(
+            r#"^(?P<severity>ERROR|WARNING): (?P<filepath>[^?<>*|"\n]+):(?P<linenum>\d+): (?:'.*' :|[a-z]+\(#\d+\)) +(?P<output>.+)$"#,
+        ),
+    }
+    .unwrap()
+});
 
 pub const IRIS_COMMON_MACROS: &str = "#define IS_LSP_MCSHADER
 #define MC_VERSION 12111

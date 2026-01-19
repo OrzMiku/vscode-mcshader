@@ -48,8 +48,10 @@ pub const IRIS_COMMON_MACROS: &str = "#define IS_LSP_MCSHADER
 #define MC_VERSION 12111
 #define IS_IRIS
 #define IRIS_HAS_TRANSLUCENCY_SORTING
-#define IRIS_TAG_SUPPORT
+#define IRIS_TAG_SUPPORT 2
 #define IRIS_VERSION 11004
+#define IRIS_HAS_CONNECTED_TEXTURES
+#define MC_MIPMAP_LEVEL 4
 #define MC_GL_VERSION 320
 #define MC_GLSL_VERSION 150
 #define MC_NORMAL_MAP
@@ -96,7 +98,8 @@ pub const IRIS_COMMON_MACROS: &str = "#define IS_LSP_MCSHADER
 #define DH_BLOCK_WATER 12
 #define DH_BLOCK_GRASS 13
 #define DH_BLOCK_AIR 14
-#define DH_BLOCK_ILLUMINATED 15\n";
+#define DH_BLOCK_ILLUMINATED 15
+#define DISTANT_HORIZONS\n";
 
 #[cfg(target_os = "linux")]
 pub const IRIS_OS_MACRO: &str = "#define MC_OS_LINUX\n";

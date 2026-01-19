@@ -15,7 +15,7 @@ impl Command for VirtualMerge {
         };
 
         #[cfg(target_os = "windows")]
-        let file_path = PathBuf::from(file_uri.strip_prefix('/').unwrap().replace('/', MAIN_SEPARATOR_STR));
+        let file_path = PathBuf::from(file_uri.strip_prefix('/').unwrap().replace('/', std::path::MAIN_SEPARATOR_STR));
         #[cfg(not(target_os = "windows"))]
         let file_path = PathBuf::from(file_uri);
 

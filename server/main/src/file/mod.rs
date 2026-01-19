@@ -4,7 +4,7 @@ use std::{
     cell::RefCell,
     ffi::OsString,
     fs::read_to_string,
-    path::{Component, MAIN_SEPARATOR_STR, Path, PathBuf},
+    path::{Component, Path, PathBuf, MAIN_SEPARATOR_STR},
     rc::Rc,
 };
 

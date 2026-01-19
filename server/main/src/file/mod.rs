@@ -199,6 +199,8 @@ fn end_in_comment(index: usize, comment_matches: Matches<'_, '_>, in_comment: &m
 pub fn preprocess_shader(shader_content: &mut String, mut version: String, is_debug: bool) -> u32 {
     let mut offset = 2;
 
+    // TODO: Patch `#extension` somehow so that it works like in Iris.
+
     if let Some(capture) = RE_MACRO_VERSION.captures(&version) {
         if capture.get(1).unwrap().as_str().parse::<u32>().unwrap() > 150 {
             offset = 1;
@@ -209,7 +211,7 @@ pub fn preprocess_shader(shader_content: &mut String, mut version: String, is_de
     version.push('\n');
 
     if !is_debug {
-        version += OPTIFINE_MACROS;
+        version += IRIS_COMMON_MACROS;
         version += IRIS_OS_MACRO;
     }
     version += shader_content;

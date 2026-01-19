@@ -44,7 +44,12 @@ lazy_static! {
     };
 }
 
-pub const OPTIFINE_MACROS: &str = "#define MC_VERSION 11900
+// TODO: Detect renderer and driver vendor at runtime.
+pub const IRIS_COMMON_MACROS: &str = "#define MC_VERSION 12111
+#define IS_IRIS
+#define IRIS_HAS_TRANSLUCENCY_SORTING
+#define IRIS_TAG_SUPPORT
+#define IRIS_VERSION 11004
 #define MC_GL_VERSION 320
 #define MC_GLSL_VERSION 150
 #define MC_GL_VENDOR_OTHER

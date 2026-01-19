@@ -53,7 +53,7 @@ impl ServerData {
     pub fn new() -> Self {
         let mut tree_sitter_parser = Parser::new();
         tree_sitter_parser.set_language(&tree_sitter_glsl::LANGUAGE_GLSL.into()).unwrap();
-        ServerData {
+        Self {
             temp_lint: RefCell::new(false),
             extensions: RefCell::new(BASIC_EXTENSIONS.clone()),
             shader_packs: RefCell::new(HashSet::new()),
@@ -85,8 +85,8 @@ pub struct MinecraftLanguageServer {
 pub struct LanguageServerError;
 
 impl MinecraftLanguageServer {
-    pub fn new(client: Client) -> MinecraftLanguageServer {
-        MinecraftLanguageServer {
+    pub fn new(client: Client) -> Self {
+        Self {
             client,
             server_data: Mutex::new(ServerData::new()),
             _log_guard: logging::init_logger(),
@@ -185,7 +185,7 @@ impl LanguageServer for MinecraftLanguageServer {
 
         match logging::Level::from_str(&config.log_level) {
             Ok(level) => logging::set_level(level),
-            Err(_) => error!("Got unexpected log level from config"; "level" => &config.log_level),
+            Err(()) => error!("Got unexpected log level from config"; "level" => &config.log_level),
         }
 
         config.extra_extension.extend(BASIC_EXTENSIONS.clone());
@@ -197,7 +197,7 @@ impl LanguageServer for MinecraftLanguageServer {
 
     #[logging::with_trace_id]
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        self.open_file(params)
+        self.open_file(params);
     }
 
     #[logging::with_trace_id]
@@ -223,7 +223,7 @@ impl LanguageServer for MinecraftLanguageServer {
 
     #[logging::with_trace_id]
     async fn will_rename_files(&self, params: RenameFilesParams) -> Result<Option<WorkspaceEdit>> {
-        Ok(self.rename_files(params))
+        Ok(Some(self.rename_files(params)))
     }
 
     #[logging::with_trace_id]

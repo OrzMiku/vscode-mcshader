@@ -33,16 +33,13 @@ enum CommentType {
 
 fn include_path_join(root_path: &Path, curr_path: &Path, additional: &str) -> Result<PathBuf, &'static str> {
     let mut buffer: Vec<Component>;
-    let additional = match additional.strip_prefix('/') {
-        Some(path) => {
-            buffer = root_path.components().collect();
-            Path::new(path)
-        }
-        None => {
-            buffer = curr_path.components().collect();
-            buffer.pop();
-            Path::new(additional)
-        }
+    let additional = if let Some(path) = additional.strip_prefix('/') {
+        buffer = root_path.components().collect();
+        Path::new(path)
+    } else {
+        buffer = curr_path.components().collect();
+        buffer.pop();
+        Path::new(additional)
     };
 
     for component in additional.components() {
@@ -160,8 +157,8 @@ fn byte_offset(content: &str, chars: usize) -> usize {
 /// Returns (total_index, line_index)
 #[must_use]
 pub fn byte_index(content: &str, position: Position, line_mapping: &[usize]) -> (usize, usize) {
-    let line_start = line_mapping.get(position.line as usize).unwrap();
-    let rest_content = unsafe { content.get_unchecked(*line_start..) };
+    let line_start = line_mapping[position.line as usize];
+    let rest_content = unsafe { content.get_unchecked(line_start..) };
     let line_offset = byte_offset(rest_content, position.character as usize);
     (line_start + line_offset, line_offset)
 }
@@ -364,7 +361,7 @@ pub struct WorkspaceFile {
     /// Currently only contains `#line` and `#version` macro
     ignored_lines: RefCell<Vec<(usize, CommentType)>>,
     /// Files that directly include this file
-    included_files: RefCell<HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>>,
+    included_files: RefCell<HashMap<Rc<PathBuf>, Rc<Self>>>,
     /// Lines and paths for include files
     including_files: RefCell<Vec<IncludeInformation>>,
     /// Shaders Files that include this file, and diagnostics related to them

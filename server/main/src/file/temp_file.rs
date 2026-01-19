@@ -21,16 +21,13 @@ impl TempFile {
 
         let mut buffer = file_path.components();
         loop {
-            match buffer.next_back() {
-                Some(Component::Normal(file_name)) => {
-                    if file_name == "shaders" {
-                        break;
-                    }
-                }
-                _ => {
-                    file_type = gl::INVALID_ENUM;
+            if let Some(Component::Normal(file_name)) = buffer.next_back() {
+                if file_name == "shaders" {
                     break;
                 }
+            } else {
+                file_type = gl::INVALID_ENUM;
+                break;
             }
         }
 
@@ -58,7 +55,7 @@ impl TempFile {
             .and_then(|parent| parent.file_name())
             .is_some_and(|name| name == "debug");
 
-        let temp_file = TempFile {
+        let temp_file = Self {
             file_type: RefCell::new(file_type),
             shader_pack: ShaderPack { path: pack_path, debug },
             content: RefCell::new(content),
@@ -148,18 +145,17 @@ impl TempFile {
                 let start = unsafe { line_content.get_unchecked(..start_byte) }.chars().count();
                 let end = start + unsafe { line_content.get_unchecked(start_byte..end_byte) }.chars().count();
 
-                match captures.get(2).unwrap().as_str() {
-                    "include" => match include_path_join(pack_path, file_path, path) {
+                if captures.get(2).unwrap().as_str() == "include" {
+                    match include_path_join(pack_path, file_path, path) {
                         Ok(include_path) => including_files.push((line, start, end, include_path)),
                         Err(error) => error!("Unable to parse include link {}, error: {}", path, error),
-                    },
-                    _ => {
-                        // If marco name is not include, it must be moj_import
-                        let additional_path = "include".to_owned() + MAIN_SEPARATOR_STR + path;
-                        let include_path = pack_path.join(additional_path);
-
-                        including_files.push((line, start, end, include_path));
                     }
+                } else {
+                    // If macro name is not include, it must be moj_import.
+                    let additional_path = "include".to_owned() + MAIN_SEPARATOR_STR + path;
+                    let include_path = pack_path.join(additional_path);
+
+                    including_files.push((line, start, end, include_path));
                 }
             } else {
                 end_in_comment(0, comment_matches, &mut in_comment, &mut comment_type);
@@ -343,8 +339,8 @@ impl TempFile {
 
     #[allow(clippy::too_many_arguments)]
     pub fn into_workspace_file(
-        self, workspace_files: &mut HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>, temp_files: &mut HashMap<PathBuf, TempFile>,
-        parser: &mut Parser, file_path: PathBuf, parent_path: &Rc<PathBuf>, parent_file: &Rc<WorkspaceFile>, depth: i32,
+        self, workspace_files: &mut HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>, temp_files: &mut HashMap<PathBuf, Self>, parser: &mut Parser,
+        file_path: PathBuf, parent_path: &Rc<PathBuf>, parent_file: &Rc<WorkspaceFile>, depth: i32,
     ) -> (Rc<PathBuf>, Rc<WorkspaceFile>) {
         let workspace_file = Rc::new(WorkspaceFile {
             file_type: RefCell::new(gl::NONE),

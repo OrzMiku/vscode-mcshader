@@ -12,3 +12,8 @@ codegen-units = 1
 [profile.dev]
 debug = false
 strip = "debuginfo"
+
+[workspace.lints.clippy]
+missing_const_for_fn = "warn"
+use_self = "warn"
+match_same_arms = "warn"

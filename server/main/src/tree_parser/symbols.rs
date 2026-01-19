@@ -65,9 +65,8 @@ impl TreeParser {
 
         for query_match in query_cursor.matches(&SYMBOLS_QUERY, tree.root_node(), content_bytes) {
             let mut capture_iter = query_match.captures.iter();
-            let capture = match capture_iter.next() {
-                Some(capture) => capture,
-                None => continue,
+            let Some(capture) = capture_iter.next() else {
+                continue;
             };
 
             let capture_name = SYMBOLS_QUERY.capture_names()[capture.index as usize];
@@ -75,8 +74,7 @@ impl TreeParser {
             let (kind, node) = match capture_name {
                 "const_qualifier" => (SymbolKind::CONSTANT, capture_iter.next().unwrap().node),
                 "ident" => (SymbolKind::VARIABLE, capture.node),
-                "preproc_func_ident" => (SymbolKind::FUNCTION, capture.node),
-                "func_ident" => (SymbolKind::FUNCTION, capture.node),
+                "preproc_func_ident" | "func_ident" => (SymbolKind::FUNCTION, capture.node),
                 "define_ident" => (SymbolKind::STRING, capture.node),
                 "struct_ident" => (SymbolKind::STRUCT, capture.node),
                 "field_list" => (SymbolKind::FIELD, capture_iter.next().unwrap().node),

@@ -12,5 +12,5 @@ doctest = false
 quote = "1.0"
 syn = { version = "1.0", features = [ "full" ] }
 
-[lints.clippy]
-missing_const_for_fn = "warn"
+[lints]
+workspace = true

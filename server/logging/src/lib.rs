@@ -27,8 +27,7 @@ pub fn init_logger() -> GlobalLoggerGuard {
 
 pub fn set_level(level: Level) {
     let drain = match level {
-        Level::Critical => &*ERROR_DRAIN,
-        Level::Error => &*ERROR_DRAIN,
+        Level::Critical | Level::Error => &*ERROR_DRAIN,
         Level::Warning => &*WARN_DRAIN,
         Level::Info => &*INFO_DRAIN,
         Level::Debug => &*DEBUG_DRAIN,

@@ -8,7 +8,7 @@ pub struct OpenGlContext {
 }
 
 impl OpenGlContext {
-    pub fn new() -> OpenGlContext {
+    pub fn new() -> Self {
         let events_loop = glutin::event_loop::EventLoop::new();
         let not_current_context = glutin::ContextBuilder::new()
             .build_headless(&*events_loop, glutin::dpi::PhysicalSize::new(1, 1))
@@ -17,7 +17,7 @@ impl OpenGlContext {
         let context = unsafe { not_current_context.make_current().unwrap() };
         gl::load_with(|symbol| context.get_proc_address(symbol));
 
-        OpenGlContext { _ctx: context }
+        Self { _ctx: context }
     }
 
     pub fn validate_shader(&self, file_type: gl::types::GLenum, source: &str) -> Option<String> {
@@ -30,7 +30,9 @@ impl OpenGlContext {
             // Check for shader compilation errors
             let mut success = gl::FALSE as i32;
             gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
-            let result = if success != gl::TRUE as i32 {
+            let result = if success == gl::TRUE as i32 {
+                None
+            } else {
                 let mut info_len: c_int = 0;
                 gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut info_len);
                 let mut info = Vec::with_capacity(info_len as usize);
@@ -43,8 +45,6 @@ impl OpenGlContext {
                 };
                 info.set_len(info_len);
                 Some(String::from_utf8_unchecked(info))
-            } else {
-                None
             };
             gl::DeleteShader(shader);
             result

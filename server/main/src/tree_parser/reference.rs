@@ -11,7 +11,7 @@ impl TreeParser {
         let parent = current_node.parent()?;
 
         match (current_node.kind(), parent.kind()) {
-            (_, "function_declarator") | (_, "preproc_function_def") => {
+            (_, "function_declarator" | "preproc_function_def") => {
                 let query_str = function_ref_pattern(current_node.utf8_text(content.as_bytes()).unwrap());
                 Some(Self::simple_global_search(url, tree, content, &query_str, line_mapping))
             }

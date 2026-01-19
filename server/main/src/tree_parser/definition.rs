@@ -81,12 +81,10 @@ impl TreeParser {
                 let query_str = function_def_pattern(current_node.utf8_text(content.as_bytes()).unwrap());
                 Self::simple_global_search(url, tree, content, &query_str, line_mapping)
             }
-            (_, "function_declarator") | (_, "preproc_function_def") => vec![current_node.to_location(url, content, line_mapping); 1],
-            ("identifier", "argument_list")
-            | ("identifier", "field_expression")
-            | ("identifier", "binary_expression")
-            | ("identifier", "return_statement")
-            | ("identifier", "assignment_expression") => Self::tree_climbing_search(content, url, current_node, line_mapping),
+            (_, "function_declarator" | "preproc_function_def") => vec![current_node.to_location(url, content, line_mapping); 1],
+            ("identifier", "argument_list" | "field_expression" | "binary_expression" | "return_statement" | "assignment_expression") => {
+                Self::tree_climbing_search(content, url, current_node, line_mapping)
+            }
             ("identifier", "init_declarator") => match current_node.prev_sibling() {
                 Some(_) => Self::tree_climbing_search(content, url, current_node, line_mapping),
                 None => vec![],

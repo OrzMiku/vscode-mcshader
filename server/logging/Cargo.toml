@@ -19,5 +19,5 @@ rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
 lazy_static = "1.5"
 logging_macro = { path = "../logging_macro" }
 
-[lints.clippy]
-missing_const_for_fn = "warn"
+[lints]
+workspace = true

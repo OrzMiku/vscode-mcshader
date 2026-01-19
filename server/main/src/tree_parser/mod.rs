@@ -27,13 +27,13 @@ impl ToLspTypes for Node<'_> {
         let start_position = self.start_position();
         let end_position = self.end_position();
 
-        let start_line_index = line_mapping.get(start_position.row).unwrap();
-        let end_line_index = line_mapping.get(end_position.row).unwrap();
+        let start_line_index = line_mapping[start_position.row];
+        let end_line_index = line_mapping[end_position.row];
 
-        let start_column = unsafe { content.get_unchecked(*start_line_index..(start_line_index + start_position.column)) }
+        let start_column = unsafe { content.get_unchecked(start_line_index..(start_line_index + start_position.column)) }
             .chars()
             .count();
-        let end_column = unsafe { content.get_unchecked(*end_line_index..(end_line_index + end_position.column)) }
+        let end_column = unsafe { content.get_unchecked(end_line_index..(end_line_index + end_position.column)) }
             .chars()
             .count();
         Range {

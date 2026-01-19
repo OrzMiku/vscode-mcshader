@@ -15,7 +15,7 @@ pub struct Configuration {
 
 impl Configuration {
     #[must_use]
-    pub fn new(value: &Value) -> Configuration {
+    pub fn new(value: &Value) -> Self {
         from_value(value.as_object().unwrap().get("mcshader").unwrap().to_owned()).unwrap()
     }
 

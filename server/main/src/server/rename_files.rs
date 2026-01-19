@@ -19,7 +19,7 @@ fn abstract_include_path(pack_path: &Path, absolute_path: &Path) -> core::result
                 }
                 break Ok(resource);
             }
-            (Some(_), None) => break Err(()),
+            (Some(_) | None, None) => break Err(()),
             (None, Some(component)) => {
                 let mut resource = "/".to_owned();
                 resource += component.as_os_str().to_str().unwrap();
@@ -29,7 +29,6 @@ fn abstract_include_path(pack_path: &Path, absolute_path: &Path) -> core::result
                 }
                 break Ok(resource);
             }
-            (None, None) => break Err(()),
         }
     }
 }
@@ -73,7 +72,7 @@ fn rename_file(
 }
 
 impl MinecraftLanguageServer {
-    pub fn rename_files(&self, params: RenameFilesParams) -> Option<WorkspaceEdit> {
+    pub fn rename_files(&self, params: RenameFilesParams) -> WorkspaceEdit {
         let server_data = self.server_data.lock().unwrap();
         let workspace_files = server_data.workspace_files.borrow_mut();
 
@@ -97,10 +96,10 @@ impl MinecraftLanguageServer {
             }
         }
 
-        Some(WorkspaceEdit {
+        WorkspaceEdit {
             changes: Some(changes),
             document_changes: None,
             change_annotations: None,
-        })
+        }
     }
 }

@@ -213,6 +213,46 @@ pub fn preprocess_shader(shader_content: &mut String, mut version: String, is_de
     if !is_debug {
         version += IRIS_COMMON_MACROS;
         version += IRIS_OS_MACRO;
+        version += {
+            let vendor = OPENGL_CONTEXT.vendor().to_ascii_lowercase();
+
+            // Match Iris behavior.
+            if vendor.starts_with("ati") {
+                "#define MC_GL_VENDOR_ATI\n"
+            } else if vendor.starts_with("intel") {
+                "#define MC_GL_VENDOR_INTEL\n"
+            } else if vendor.starts_with("nvidia") {
+                "#define MC_GL_VENDOR_NVIDIA\n"
+            } else if vendor.starts_with("amd") {
+                "#define MC_GL_VENDOR_AMD\n"
+            } else if vendor.starts_with("x.org") {
+                "#define MC_GL_VENDOR_XORG\n"
+            } else {
+                "#define MC_GL_VENDOR_OTHER\n"
+            }
+        };
+        version += {
+            let renderer = OPENGL_CONTEXT.renderer().to_ascii_lowercase();
+
+            // Match Iris behavior.
+            if renderer.starts_with("amd") || renderer.starts_with("ati") || renderer.starts_with("radeon") {
+                "#define MC_GL_RENDERER_RADEON\n"
+            } else if renderer.starts_with("gallium") {
+                "#define MC_GL_RENDERER_GALLIUM\n"
+            } else if renderer.starts_with("intel") {
+                "#define MC_GL_RENDERER_INTEL\n"
+            } else if renderer.starts_with("geforce") || renderer.starts_with("nvidia") {
+                "#define MC_GL_RENDERER_GEFORCE\n"
+            } else if renderer.starts_with("quadro") || renderer.starts_with("nvs") {
+                "#define MC_GL_RENDERER_QUADRO\n"
+            } else if renderer.starts_with("mesa") {
+                "#define MC_GL_RENDERER_MESA\n"
+            } else if renderer.starts_with("apple") {
+                "#define MC_GL_RENDERER_APPLE\n"
+            } else {
+                "#define MC_GL_RENDERER_OTHER\n"
+            }
+        }
     }
     version += shader_content;
     *shader_content = version;

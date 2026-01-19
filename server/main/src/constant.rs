@@ -44,7 +44,6 @@ lazy_static! {
     };
 }
 
-// TODO: Detect renderer and driver vendor at runtime.
 pub const IRIS_COMMON_MACROS: &str = "#define MC_VERSION 12111
 #define IS_IRIS
 #define IRIS_HAS_TRANSLUCENCY_SORTING
@@ -52,8 +51,6 @@ pub const IRIS_COMMON_MACROS: &str = "#define MC_VERSION 12111
 #define IRIS_VERSION 11004
 #define MC_GL_VERSION 320
 #define MC_GLSL_VERSION 150
-#define MC_GL_VENDOR_OTHER
-#define MC_GL_RENDERER_OTHER
 #define MC_NORMAL_MAP
 #define MC_SPECULAR_MAP
 #define MC_RENDER_QUALITY 1.0

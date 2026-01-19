@@ -1,4 +1,4 @@
-use std::ffi::{c_int, CStr, CString};
+use std::ffi::{CStr, CString, c_int};
 use std::ptr;
 
 pub struct OpenGlContext {
@@ -51,6 +51,10 @@ impl OpenGlContext {
 
     pub fn vendor(&self) -> String {
         unsafe { String::from_utf8_unchecked(CStr::from_ptr(gl::GetString(gl::VENDOR) as *const _).to_bytes().to_vec()) }
+    }
+
+    pub fn renderer(&self) -> String {
+        unsafe { String::from_utf8_unchecked(CStr::from_ptr(gl::GetString(gl::RENDERER) as *const _).to_bytes().to_vec()) }
     }
 }
 

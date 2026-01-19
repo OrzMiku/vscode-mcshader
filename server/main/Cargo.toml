@@ -14,7 +14,7 @@ regex = "1.12"
 serde = "1.0"
 serde_json = "1.0"
 tower-lsp = "0.20"
-tokio = { version = "1.49", features = ["full"] }
+tokio = { version = "1.49", features = ["rt", "rt-multi-thread", "io-std", "macros", "parking_lot"] }
 tree-sitter = "0.23"
 tree-sitter-glsl = "0.2"
 url = "2.5"

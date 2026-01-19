@@ -8,3 +8,7 @@ resolver = "2"
 lto = "thin"
 strip = "symbols"
 codegen-units = 1
+
+[profile.dev]
+debug = false
+strip = "debuginfo"

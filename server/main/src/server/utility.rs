@@ -14,10 +14,11 @@ impl MinecraftLanguageServer {
                 let relative_path = relative_path.to_str().unwrap();
                 if RE_BASIC_SHADERS.is_match(relative_path) {
                     return Some(shader_pack);
-                } else if let Some(result) = relative_path.split_once(MAIN_SEPARATOR) {
-                    if RE_DIMENSION_FOLDER.is_match(result.0) && RE_BASIC_SHADERS.is_match(result.1) {
-                        return Some(shader_pack);
-                    }
+                } else if let Some(result) = relative_path.split_once(MAIN_SEPARATOR)
+                    && RE_DIMENSION_FOLDER.is_match(result.0)
+                    && RE_BASIC_SHADERS.is_match(result.1)
+                {
+                    return Some(shader_pack);
                 }
                 return None;
             }
@@ -34,14 +35,14 @@ impl MinecraftLanguageServer {
                 .and_then(|parent| parent.file_name())
                 .is_some_and(|name| name == "debug");
             shader_packs.push(Rc::new(ShaderPack { path: curr_path, debug }));
-        } else if file_name.to_str().is_none_or(|name| !name.starts_with('.') || name == ".minecraft") {
-            if let Ok(dir) = curr_path.read_dir() {
-                dir.filter_map(|file| file.ok())
-                    .filter(|file| file.file_type().unwrap().is_dir())
-                    .for_each(|file| {
-                        Self::find_shader_packs(shader_packs, file.path());
-                    })
-            }
+        } else if file_name.to_str().is_none_or(|name| !name.starts_with('.') || name == ".minecraft")
+            && let Ok(dir) = curr_path.read_dir()
+        {
+            dir.filter_map(|file| file.ok())
+                .filter(|file| file.file_type().unwrap().is_dir())
+                .for_each(|file| {
+                    Self::find_shader_packs(shader_packs, file.path());
+                })
         }
     }
 

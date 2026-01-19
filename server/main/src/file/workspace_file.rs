@@ -345,10 +345,10 @@ impl WorkspaceFile {
         let mut ignored_lines = ignored_lines.iter();
         let mut start_index = 0;
 
-        if let Some((start, end)) = self.version.borrow().as_ref() {
-            if version.is_empty() {
-                *version = unsafe { content.get_unchecked(*start..*end).to_owned() };
-            }
+        if let Some((start, end)) = self.version.borrow().as_ref()
+            && version.is_empty()
+        {
+            *version = unsafe { content.get_unchecked(*start..*end).to_owned() };
         }
 
         if depth < 10 {

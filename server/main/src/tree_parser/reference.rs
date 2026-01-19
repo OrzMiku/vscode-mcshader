@@ -1,5 +1,6 @@
 use super::*;
 
+#[must_use]
 fn function_ref_pattern(name: &str) -> String {
     r#"((call_expression(identifier) @call)(#match? @call "^"#.to_owned() + name + r#"$"))"#
 }

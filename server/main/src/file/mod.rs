@@ -82,6 +82,7 @@ fn push_line_macro(content: &mut String, line: usize, file_id: &str, file_name: 
     content.push_str(file_name);
 }
 
+#[must_use]
 pub fn generate_line_mapping(content: &str) -> Vec<usize> {
     let mut line_mapping = vec![0];
     content.match_indices('\n').for_each(|(index, _)| {
@@ -125,6 +126,7 @@ fn push_str_without_ignored(
     shader_content.push_str(unsafe { file_content.get_unchecked(start_index..end_index) });
 }
 
+#[must_use]
 fn byte_offset(content: &str, chars: usize) -> usize {
     /*
         let mut iter = content.as_bytes().iter();
@@ -156,6 +158,7 @@ fn byte_offset(content: &str, chars: usize) -> usize {
 
 /// Byte index generated from char index
 /// Returns (total_index, line_index)
+#[must_use]
 pub fn byte_index(content: &str, position: Position, line_mapping: &[usize]) -> (usize, usize) {
     let line_start = line_mapping.get(position.line as usize).unwrap();
     let rest_content = unsafe { content.get_unchecked(*line_start..) };

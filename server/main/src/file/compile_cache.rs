@@ -3,6 +3,8 @@ use std::{collections::hash_map::DefaultHasher, hash::Hasher};
 use super::*;
 
 impl CompileCache {
+    #[must_use]
+    #[inline]
     pub const fn new() -> Self {
         Self { index: 0, cache: [0; 8] }
     }
@@ -15,6 +17,7 @@ impl CompileCache {
         self.index = (self.index + 1) % 8;
     }
 
+    #[must_use]
     pub fn check(&self, source: &str) -> bool {
         let mut hash_builder = DefaultHasher::new();
         hash_builder.write(source.as_bytes());

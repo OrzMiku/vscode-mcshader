@@ -1,5 +1,6 @@
 use super::*;
 
+#[must_use]
 fn function_def_pattern(name: &str) -> String {
     r#"[
         (function_declarator
@@ -14,6 +15,7 @@ fn function_def_pattern(name: &str) -> String {
         + r#"$")]"#
 }
 
+#[must_use]
 fn variable_def_pattern(name: &str) -> String {
     let mut pattern = r#"[
         (init_declarator
@@ -36,6 +38,7 @@ fn variable_def_pattern(name: &str) -> String {
 }
 
 impl TreeParser {
+    #[must_use]
     fn tree_climbing_search(content: &str, url: &Url, start_node: Node, line_mapping: &[usize]) -> Vec<Location> {
         let mut locations = vec![];
 
@@ -68,6 +71,7 @@ impl TreeParser {
         locations
     }
 
+    #[must_use]
     pub fn find_definitions(url: &Url, position: Position, tree: &Tree, content: &str, line_mapping: &[usize]) -> Option<Vec<Location>> {
         let current_node = Self::current_node_fetch(position, tree, content, line_mapping)?;
         let parent = current_node.parent()?;

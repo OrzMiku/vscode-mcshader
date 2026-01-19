@@ -1,6 +1,8 @@
 use std::ffi::{CStr, CString, c_int};
 use std::ptr;
 
+use gl::types::GLenum;
+
 pub struct OpenGlContext {
     _ctx: glutin::Context<glutin::PossiblyCurrent>,
 }
@@ -49,12 +51,21 @@ impl OpenGlContext {
         }
     }
 
-    pub fn vendor(&self) -> String {
-        unsafe { String::from_utf8_unchecked(CStr::from_ptr(gl::GetString(gl::VENDOR) as *const _).to_bytes().to_vec()) }
+    #[must_use]
+    #[inline]
+    pub fn vendor(&self) -> &str {
+        self.get_str(gl::VENDOR)
     }
 
-    pub fn renderer(&self) -> String {
-        unsafe { String::from_utf8_unchecked(CStr::from_ptr(gl::GetString(gl::RENDERER) as *const _).to_bytes().to_vec()) }
+    #[must_use]
+    #[inline]
+    pub fn renderer(&self) -> &str {
+        self.get_str(gl::RENDERER)
+    }
+
+    #[must_use]
+    fn get_str<'a>(&self, gl_enum: GLenum) -> &'a str {
+        unsafe { str::from_utf8_unchecked(CStr::from_ptr(gl::GetString(gl_enum) as *const _).to_bytes()) }
     }
 }
 

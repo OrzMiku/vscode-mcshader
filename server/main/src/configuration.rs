@@ -14,10 +14,12 @@ pub struct Configuration {
 }
 
 impl Configuration {
+    #[must_use]
     pub fn new(value: &Value) -> Configuration {
         from_value(value.as_object().unwrap().get("mcshader").unwrap().to_owned()).unwrap()
     }
 
+    #[must_use]
     pub fn generate_file_watch_registration(&self) -> Vec<Registration> {
         let mut glsl_file_pattern = "**/*.{vsh,gsh,fsh,csh,glsl".to_owned();
         let mut folder_pattern = "**/shaders/**/*[!{.csh,.vsh,.gsh,.fsh,.tcs,.tes,.glsl".to_owned();

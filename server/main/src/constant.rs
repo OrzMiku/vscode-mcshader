@@ -31,7 +31,7 @@ lazy_static! {
     pub static ref RE_COMMENT: Regex = Regex::new(r"/[/*]|\*/|\\\r?$").unwrap();
     pub static ref OPENGL_CONTEXT: OpenGlContext = OpenGlContext::new();
     pub static ref DIAGNOSTICS_REGEX: Regex = {
-        match OPENGL_CONTEXT.vendor().as_str() {
+        match OPENGL_CONTEXT.vendor() {
             "NVIDIA Corporation" => Regex::new(
                 r"^(?P<filepath>\d+)\((?P<linenum>\d+)\) : (?P<severity>error|warning) [A-C]\d+: (?P<output>.+)"
             ),

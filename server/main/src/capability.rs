@@ -3,6 +3,7 @@ use tower_lsp::lsp_types::*;
 pub struct ServerCapabilitiesFactroy;
 
 impl ServerCapabilitiesFactroy {
+    #[must_use]
     pub fn initial_capabilities() -> InitializeResult {
         InitializeResult {
             server_info: None,

@@ -1,6 +1,8 @@
 use super::*;
 
 impl TempFile {
+    #[must_use]
+    #[inline]
     pub const fn shader_pack(&self) -> &ShaderPack {
         &self.shader_pack
     }
@@ -167,6 +169,7 @@ impl TempFile {
         *self.ignored_lines.borrow_mut() = ignored_lines;
     }
 
+    #[must_use]
     pub fn merge_self(&self, file_path: &Path) -> Option<(String, String)> {
         let file_type = *self.file_type.borrow();
         if file_type == gl::NONE || file_type == gl::INVALID_ENUM {
@@ -382,22 +385,27 @@ impl TempFile {
 }
 
 impl ShaderFile for TempFile {
+    #[inline]
     fn file_type(&self) -> &RefCell<u32> {
         &self.file_type
     }
 
+    #[inline]
     fn content(&self) -> &RefCell<String> {
         &self.content
     }
 
+    #[inline]
     fn cache(&self) -> &RefCell<Option<CompileCache>> {
         &self.cache
     }
 
+    #[inline]
     fn tree(&self) -> &RefCell<Tree> {
         &self.tree
     }
 
+    #[inline]
     fn line_mapping(&self) -> &RefCell<Vec<usize>> {
         &self.line_mapping
     }

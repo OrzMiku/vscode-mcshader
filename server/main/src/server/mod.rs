@@ -132,12 +132,11 @@ impl LanguageServer for MinecraftLanguageServer {
                 .general
                 .unwrap()
                 .position_encodings
-                .unwrap()
-                .contains(&PositionEncodingKind::UTF16)
+                .is_none_or(|encs| encs.is_empty() || encs.contains(&PositionEncodingKind::UTF16))
         );
 
-        let initialize_result = ServerCapabilitiesFactroy::initial_capabilities();
-        // initialize_result.capabilities.position_encoding = Some(PositionEncodingKind::UTF16);
+        let mut initialize_result = ServerCapabilitiesFactroy::initial_capabilities();
+        initialize_result.capabilities.position_encoding = Some(PositionEncodingKind::UTF16);
 
         let roots: Vec<PathBuf> = if let Some(workspaces) = params.workspace_folders {
             workspaces

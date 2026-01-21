@@ -19,7 +19,7 @@ pub static BASIC_EXTENSIONS: LazyLock<HashSet<Box<str>>> = LazyLock::new(|| {
 });
 pub static RE_BASIC_SHADERS: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-    r"^(dh_(terrain|water|shadow)|shadow(|_solid|_cutout|_water|_entities|_block)|gbuffers_(armor_glint|basic|beaconbeam|block|clouds|damagedblock|entities|entities_glowing|hand|hand_water|line|skybasic|skytextured|spidereyes|terrain|textured|textured_lit|water|weather|particles|particles_translucent|block_translucent|entities_translucent|terrain_solid|terrain_cutout|lightning)).(vsh|gsh|fsh|tcs|tes)|setup.csh|(final|(begin|shadowcomp|prepare|deferred|composite)([1-9]\d?)?)(.vsh|.gsh|.fsh|(_[a-z])?.csh)$"
+    r"^(dh_(terrain|water|shadow)|shadow(|_solid|_cutout|_water|_entities|_block)|gbuffers_(armor_glint|basic|beaconbeam|block|clouds|damagedblock|entities|entities_glowing|hand|hand_water|line|skybasic|skytextured|spidereyes|terrain|textured|textured_lit|water|weather|particles|particles_translucent|block_translucent|entities_translucent|terrain_solid|terrain_cutout|lightning)).(vsh|gsh|fsh|tcs|tes)|setup([1-9]\d?)?.csh|(final|(begin|shadowcomp|prepare|deferred|composite)([1-9]\d?)?)(.vsh|.gsh|.fsh|(_[a-z])?.csh)$"
 ).unwrap()
 });
 pub static COMMAND_LIST: LazyLock<HashMap<&'static str, Box<dyn Command + Sync + Send>>> =

@@ -2,4 +2,3 @@ node_modules
 out
 *.txt
 *.vsix
-server/vscode-mcshader

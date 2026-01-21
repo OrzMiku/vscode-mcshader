@@ -1,12 +1,14 @@
-use std::ffi::{c_int, CStr, CString};
+use std::ffi::{CStr, CString, c_int};
 use std::ptr;
+
+use gl::types::GLenum;
 
 pub struct OpenGlContext {
     _ctx: glutin::Context<glutin::PossiblyCurrent>,
 }
 
 impl OpenGlContext {
-    pub fn new() -> OpenGlContext {
+    pub fn new() -> Self {
         let events_loop = glutin::event_loop::EventLoop::new();
         let not_current_context = glutin::ContextBuilder::new()
             .build_headless(&*events_loop, glutin::dpi::PhysicalSize::new(1, 1))
@@ -15,7 +17,7 @@ impl OpenGlContext {
         let context = unsafe { not_current_context.make_current().unwrap() };
         gl::load_with(|symbol| context.get_proc_address(symbol));
 
-        OpenGlContext { _ctx: context }
+        Self { _ctx: context }
     }
 
     pub fn validate_shader(&self, file_type: gl::types::GLenum, source: &str) -> Option<String> {
@@ -28,7 +30,9 @@ impl OpenGlContext {
             // Check for shader compilation errors
             let mut success = gl::FALSE as i32;
             gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
-            let result = if success != gl::TRUE as i32 {
+            let result = if success == gl::TRUE as i32 {
+                None
+            } else {
                 let mut info_len: c_int = 0;
                 gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut info_len);
                 let mut info = Vec::with_capacity(info_len as usize);
@@ -41,16 +45,27 @@ impl OpenGlContext {
                 };
                 info.set_len(info_len);
                 Some(String::from_utf8_unchecked(info))
-            } else {
-                None
             };
             gl::DeleteShader(shader);
             result
         }
     }
 
-    pub fn vendor(&self) -> String {
-        unsafe { String::from_utf8_unchecked(CStr::from_ptr(gl::GetString(gl::VENDOR) as *const _).to_bytes().to_vec()) }
+    #[must_use]
+    #[inline]
+    pub fn vendor(&self) -> &str {
+        self.get_str(gl::VENDOR)
+    }
+
+    #[must_use]
+    #[inline]
+    pub fn renderer(&self) -> &str {
+        self.get_str(gl::RENDERER)
+    }
+
+    #[must_use]
+    fn get_str<'a>(&self, gl_enum: GLenum) -> &'a str {
+        unsafe { str::from_utf8_unchecked(CStr::from_ptr(gl::GetString(gl_enum) as *const _).to_bytes()) }
     }
 }
 

@@ -1,32 +1,33 @@
 use super::*;
 
 impl TempFile {
-    pub fn shader_pack(&self) -> &ShaderPack {
+    #[must_use]
+    #[inline]
+    pub const fn shader_pack(&self) -> &ShaderPack {
         &self.shader_pack
     }
 
     pub fn new(parser: &mut Parser, file_path: &Path, content: String) -> Self {
         warn!("Document not found in file system"; "path" => file_path.to_str().unwrap());
         let mut file_type = match file_path.extension() {
+            Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
             Some(ext) if ext == "vsh" => gl::VERTEX_SHADER,
             Some(ext) if ext == "gsh" => gl::GEOMETRY_SHADER,
             Some(ext) if ext == "fsh" => gl::FRAGMENT_SHADER,
-            Some(ext) if ext == "csh" => gl::COMPUTE_SHADER,
-            _ => gl::NONE,
+            Some(ext) if ext == "tcs" => gl::TESS_CONTROL_SHADER,
+            Some(ext) if ext == "tes" => gl::TESS_EVALUATION_SHADER,
+            _ => unreachable!(),
         };
 
         let mut buffer = file_path.components();
         loop {
-            match buffer.next_back() {
-                Some(Component::Normal(file_name)) => {
-                    if file_name == "shaders" {
-                        break;
-                    }
-                }
-                _ => {
-                    file_type = gl::INVALID_ENUM;
+            if let Some(Component::Normal(file_name)) = buffer.next_back() {
+                if file_name == "shaders" {
                     break;
                 }
+            } else {
+                file_type = gl::INVALID_ENUM;
+                break;
             }
         }
 
@@ -52,9 +53,9 @@ impl TempFile {
         let debug = pack_path
             .parent()
             .and_then(|parent| parent.file_name())
-            .map_or(false, |name| name == "debug");
+            .is_some_and(|name| name == "debug");
 
-        let temp_file = TempFile {
+        let temp_file = Self {
             file_type: RefCell::new(file_type),
             shader_pack: ShaderPack { path: pack_path, debug },
             content: RefCell::new(content),
@@ -144,18 +145,17 @@ impl TempFile {
                 let start = unsafe { line_content.get_unchecked(..start_byte) }.chars().count();
                 let end = start + unsafe { line_content.get_unchecked(start_byte..end_byte) }.chars().count();
 
-                match captures.get(2).unwrap().as_str() {
-                    "include" => match include_path_join(pack_path, file_path, path) {
+                if captures.get(2).unwrap().as_str() == "include" {
+                    match include_path_join(pack_path, file_path, path) {
                         Ok(include_path) => including_files.push((line, start, end, include_path)),
                         Err(error) => error!("Unable to parse include link {}, error: {}", path, error),
-                    },
-                    _ => {
-                        // If marco name is not include, it must be moj_import
-                        let additional_path = "include".to_owned() + MAIN_SEPARATOR_STR + path;
-                        let include_path = pack_path.join(additional_path);
-
-                        including_files.push((line, start, end, include_path));
                     }
+                } else {
+                    // If macro name is not include, it must be moj_import.
+                    let additional_path = "include".to_owned() + MAIN_SEPARATOR_STR + path;
+                    let include_path = pack_path.join(additional_path);
+
+                    including_files.push((line, start, end, include_path));
                 }
             } else {
                 end_in_comment(0, comment_matches, &mut in_comment, &mut comment_type);
@@ -165,6 +165,7 @@ impl TempFile {
         *self.ignored_lines.borrow_mut() = ignored_lines;
     }
 
+    #[must_use]
     pub fn merge_self(&self, file_path: &Path) -> Option<(String, String)> {
         let file_type = *self.file_type.borrow();
         if file_type == gl::NONE || file_type == gl::INVALID_ENUM {
@@ -327,7 +328,7 @@ impl TempFile {
                     end_in_comment(0, comment_matches, &mut in_comment, &mut comment_type);
                     temp_content.push_str(content);
                 }
-            };
+            }
             temp_content.push('\n');
             true
         } else {
@@ -338,8 +339,8 @@ impl TempFile {
 
     #[allow(clippy::too_many_arguments)]
     pub fn into_workspace_file(
-        self, workspace_files: &mut HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>, temp_files: &mut HashMap<PathBuf, TempFile>,
-        parser: &mut Parser, file_path: PathBuf, parent_path: &Rc<PathBuf>, parent_file: &Rc<WorkspaceFile>, depth: i32,
+        self, workspace_files: &mut HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>, temp_files: &mut HashMap<PathBuf, Self>, parser: &mut Parser,
+        file_path: PathBuf, parent_path: &Rc<PathBuf>, parent_file: &Rc<WorkspaceFile>, depth: i32,
     ) -> (Rc<PathBuf>, Rc<WorkspaceFile>) {
         let workspace_file = Rc::new(WorkspaceFile {
             file_type: RefCell::new(gl::NONE),
@@ -362,7 +363,7 @@ impl TempFile {
             ),
         });
         let file_path = Rc::new(file_path);
-        workspace_files.insert_unique_unchecked(file_path.clone(), workspace_file.clone());
+        unsafe { workspace_files.insert_unique_unchecked(file_path.clone(), workspace_file.clone()) };
 
         if depth < 10 {
             WorkspaceFile::parse_content(
@@ -380,22 +381,27 @@ impl TempFile {
 }
 
 impl ShaderFile for TempFile {
+    #[inline]
     fn file_type(&self) -> &RefCell<u32> {
         &self.file_type
     }
 
+    #[inline]
     fn content(&self) -> &RefCell<String> {
         &self.content
     }
 
+    #[inline]
     fn cache(&self) -> &RefCell<Option<CompileCache>> {
         &self.cache
     }
 
+    #[inline]
     fn tree(&self) -> &RefCell<Tree> {
         &self.tree
     }
 
+    #[inline]
     fn line_mapping(&self) -> &RefCell<Vec<usize>> {
         &self.line_mapping
     }

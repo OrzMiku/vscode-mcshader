@@ -3,6 +3,7 @@ use tower_lsp::lsp_types::*;
 pub struct ServerCapabilitiesFactroy;
 
 impl ServerCapabilitiesFactroy {
+    #[must_use]
     pub fn initial_capabilities() -> InitializeResult {
         InitializeResult {
             server_info: None,
@@ -26,7 +27,7 @@ impl ServerCapabilitiesFactroy {
                                 FileOperationFilter {
                                     scheme: Some("file".to_owned()),
                                     pattern: FileOperationPattern {
-                                        glob: "**/*.{vsh,gsh,fsh,csh,glsl}".to_owned(),
+                                        glob: "**/*.{csh,vsh,gsh,fsh,tcs,tes,glsl}".to_owned(),
                                         matches: Some(FileOperationPatternKind::File),
                                         options: None,
                                     },

@@ -1,4 +1,3 @@
-use lazy_static::lazy_static;
 use tower_lsp::lsp_types::*;
 use tree_sitter::{Node, Query, QueryCursor, Tree, TreeCursor};
 use url::Url;
@@ -27,13 +26,13 @@ impl ToLspTypes for Node<'_> {
         let start_position = self.start_position();
         let end_position = self.end_position();
 
-        let start_line_index = line_mapping.get(start_position.row).unwrap();
-        let end_line_index = line_mapping.get(end_position.row).unwrap();
+        let start_line_index = line_mapping[start_position.row];
+        let end_line_index = line_mapping[end_position.row];
 
-        let start_column = unsafe { content.get_unchecked(*start_line_index..(start_line_index + start_position.column)) }
+        let start_column = unsafe { content.get_unchecked(start_line_index..(start_line_index + start_position.column)) }
             .chars()
             .count();
-        let end_column = unsafe { content.get_unchecked(*end_line_index..(end_line_index + end_position.column)) }
+        let end_column = unsafe { content.get_unchecked(end_line_index..(end_line_index + end_position.column)) }
             .chars()
             .count();
         Range {
@@ -63,19 +62,21 @@ impl TreeParser {
     }
 
     fn simple_global_search(url: &Url, tree: &Tree, content: &str, query_str: &str, line_mapping: &[usize]) -> Vec<Location> {
-        let query = Query::new(tree_sitter_glsl::language(), query_str).unwrap();
+        let query = Query::new(&tree_sitter_glsl::LANGUAGE_GLSL.into(), query_str).unwrap();
         let mut query_cursor = QueryCursor::new();
 
         let mut locations = vec![];
 
-        for query_match in query_cursor.matches(&query, tree.root_node(), content.as_bytes()) {
-            locations.extend(
-                query_match
-                    .captures
-                    .iter()
-                    .map(|capture| capture.node.to_location(url, content, line_mapping)),
-            );
-        }
+        query_cursor
+            .matches(&query, tree.root_node(), content.as_bytes())
+            .for_each(|query_match| {
+                locations.extend(
+                    query_match
+                        .captures
+                        .iter()
+                        .map(|capture| capture.node.to_location(url, content, line_mapping)),
+                );
+            });
 
         locations
     }

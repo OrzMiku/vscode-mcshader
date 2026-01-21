@@ -1,5 +1,7 @@
+#![allow(deprecated)]
+
 use std::cell::RefCell;
-use std::path::{Path, PathBuf, MAIN_SEPARATOR};
+use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::Mutex;
@@ -40,7 +42,7 @@ pub type Diagnostics = HashMap<Url, Vec<Diagnostic>>;
 /// By sending the Mutex of server data to snyc functions, we can handle it like single thread
 pub struct ServerData {
     temp_lint: RefCell<bool>,
-    extensions: RefCell<HashSet<String>>,
+    extensions: RefCell<HashSet<Box<str>>>,
     shader_packs: RefCell<HashSet<Rc<ShaderPack>>>,
     workspace_files: RefCell<HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>>,
     temp_files: RefCell<HashMap<PathBuf, TempFile>>,
@@ -50,8 +52,8 @@ pub struct ServerData {
 impl ServerData {
     pub fn new() -> Self {
         let mut tree_sitter_parser = Parser::new();
-        tree_sitter_parser.set_language(tree_sitter_glsl::language()).unwrap();
-        ServerData {
+        tree_sitter_parser.set_language(&tree_sitter_glsl::LANGUAGE_GLSL.into()).unwrap();
+        Self {
             temp_lint: RefCell::new(false),
             extensions: RefCell::new(BASIC_EXTENSIONS.clone()),
             shader_packs: RefCell::new(HashSet::new()),
@@ -61,11 +63,11 @@ impl ServerData {
         }
     }
 
-    pub fn workspace_files(&self) -> &RefCell<HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>> {
+    pub const fn workspace_files(&self) -> &RefCell<HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>> {
         &self.workspace_files
     }
 
-    pub fn temp_files(&self) -> &RefCell<HashMap<PathBuf, TempFile>> {
+    pub const fn temp_files(&self) -> &RefCell<HashMap<PathBuf, TempFile>> {
         &self.temp_files
     }
 }
@@ -83,8 +85,8 @@ pub struct MinecraftLanguageServer {
 pub struct LanguageServerError;
 
 impl MinecraftLanguageServer {
-    pub fn new(client: Client) -> MinecraftLanguageServer {
-        MinecraftLanguageServer {
+    pub fn new(client: Client) -> Self {
+        Self {
             client,
             server_data: Mutex::new(ServerData::new()),
             _log_guard: logging::init_logger(),
@@ -124,7 +126,17 @@ impl LanguageServer for MinecraftLanguageServer {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         info!("Starting server...");
 
-        let initialize_result = ServerCapabilitiesFactroy::initial_capabilities();
+        assert!(
+            params
+                .capabilities
+                .general
+                .unwrap()
+                .position_encodings
+                .is_none_or(|encs| encs.is_empty() || encs.contains(&PositionEncodingKind::UTF16))
+        );
+
+        let mut initialize_result = ServerCapabilitiesFactroy::initial_capabilities();
+        initialize_result.capabilities.position_encoding = Some(PositionEncodingKind::UTF16);
 
         let roots: Vec<PathBuf> = if let Some(workspaces) = params.workspace_folders {
             workspaces
@@ -173,7 +185,7 @@ impl LanguageServer for MinecraftLanguageServer {
 
         match logging::Level::from_str(&config.log_level) {
             Ok(level) => logging::set_level(level),
-            Err(_) => error!("Got unexpected log level from config"; "level" => &config.log_level),
+            Err(()) => error!("Got unexpected log level from config"; "level" => &config.log_level),
         }
 
         config.extra_extension.extend(BASIC_EXTENSIONS.clone());
@@ -185,7 +197,7 @@ impl LanguageServer for MinecraftLanguageServer {
 
     #[logging::with_trace_id]
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        self.open_file(params)
+        self.open_file(params);
     }
 
     #[logging::with_trace_id]
@@ -211,7 +223,7 @@ impl LanguageServer for MinecraftLanguageServer {
 
     #[logging::with_trace_id]
     async fn will_rename_files(&self, params: RenameFilesParams) -> Result<Option<WorkspaceEdit>> {
-        Ok(self.rename_files(params))
+        Ok(Some(self.rename_files(params)))
     }
 
     #[logging::with_trace_id]

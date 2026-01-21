@@ -3,3 +3,18 @@ members = [
     "main"
 ]
 resolver = "2"
+
+[profile.release]
+lto = "thin"
+strip = "symbols"
+codegen-units = 1
+
+[profile.dev]
+debug = false
+strip = "debuginfo"
+
+[workspace.lints.clippy]
+missing_const_for_fn = "warn"
+use_self = "warn"
+match_same_arms = "warn"
+non_std_lazy_statics = "warn"

@@ -1,8 +1,10 @@
+#![allow(deprecated)]
+
 use std::{
     cell::RefCell,
     ffi::OsString,
     fs::read_to_string,
-    path::{Component, Path, PathBuf, MAIN_SEPARATOR_STR},
+    path::{Component, MAIN_SEPARATOR_STR, Path, PathBuf},
     rc::Rc,
 };
 
@@ -31,16 +33,13 @@ enum CommentType {
 
 fn include_path_join(root_path: &Path, curr_path: &Path, additional: &str) -> Result<PathBuf, &'static str> {
     let mut buffer: Vec<Component>;
-    let additional = match additional.strip_prefix('/') {
-        Some(path) => {
-            buffer = root_path.components().collect();
-            Path::new(path)
-        }
-        None => {
-            buffer = curr_path.components().collect();
-            buffer.pop();
-            Path::new(additional)
-        }
+    let additional = if let Some(path) = additional.strip_prefix('/') {
+        buffer = root_path.components().collect();
+        Path::new(path)
+    } else {
+        buffer = curr_path.components().collect();
+        buffer.pop();
+        Path::new(additional)
     };
 
     for component in additional.components() {
@@ -80,6 +79,7 @@ fn push_line_macro(content: &mut String, line: usize, file_id: &str, file_name: 
     content.push_str(file_name);
 }
 
+#[must_use]
 pub fn generate_line_mapping(content: &str) -> Vec<usize> {
     let mut line_mapping = vec![0];
     content.match_indices('\n').for_each(|(index, _)| {
@@ -100,7 +100,7 @@ fn push_str_without_ignored(
         let line_start = line_mapping[*line];
         shader_content.push_str(unsafe { file_content.get_unchecked(start_index..line_start) });
         match comment_type {
-            CommentType::None => {},
+            CommentType::None => {}
             CommentType::Single => shader_content.push_str(r"// \"),
             CommentType::Multi => shader_content.push_str(r"/*"),
         }
@@ -109,36 +109,17 @@ fn push_str_without_ignored(
     shader_content.push_str(unsafe { file_content.get_unchecked(start_index..end_index) });
 }
 
+#[must_use]
 fn byte_offset(content: &str, chars: usize) -> usize {
-    let mut iter = content.as_bytes().iter();
-    let mut index = chars;
-    for _ in 0..chars {
-        let x = match iter.next() {
-            Some(x) => *x,
-            None => break,
-        };
-        if x < 128 {
-            continue;
-        }
-        iter.next();
-        index += 1;
-        if x >= 0xE0 {
-            iter.next();
-            index += 1;
-            if x >= 0xF0 {
-                iter.next();
-                index += 1;
-            }
-        }
-    }
-    index
+    content[..chars].encode_utf16().count()
 }
 
 /// Byte index generated from char index
 /// Returns (total_index, line_index)
+#[must_use]
 pub fn byte_index(content: &str, position: Position, line_mapping: &[usize]) -> (usize, usize) {
-    let line_start = line_mapping.get(position.line as usize).unwrap();
-    let rest_content = unsafe { content.get_unchecked(*line_start..) };
+    let line_start = line_mapping[position.line as usize];
+    let rest_content = unsafe { content.get_unchecked(line_start..) };
     let line_offset = byte_offset(rest_content, position.character as usize);
     (line_start + line_offset, line_offset)
 }
@@ -155,14 +136,14 @@ fn end_in_comment(index: usize, comment_matches: Matches<'_, '_>, in_comment: &m
                     *in_comment = true;
                     *comment_type = true;
                 }
-            },
+            }
             "*/" => {
                 *in_comment = false;
-            },
+            }
             "//" => {
                 // `//` would not make next line comment unless this line ends with `\`
                 *comment_type &= *in_comment;
-            },
+            }
             // `\$` for multi comment lines using `//`
             // This is the end of line so nothing left
             _ => {
@@ -179,6 +160,8 @@ fn end_in_comment(index: usize, comment_matches: Matches<'_, '_>, in_comment: &m
 pub fn preprocess_shader(shader_content: &mut String, mut version: String, is_debug: bool) -> u32 {
     let mut offset = 2;
 
+    // TODO: Patch `#extension` somehow so that it works like in Iris.
+
     if let Some(capture) = RE_MACRO_VERSION.captures(&version) {
         if capture.get(1).unwrap().as_str().parse::<u32>().unwrap() > 150 {
             offset = 1;
@@ -189,7 +172,7 @@ pub fn preprocess_shader(shader_content: &mut String, mut version: String, is_de
     version.push('\n');
 
     if !is_debug {
-        version += OPTIFINE_MACROS;
+        version += &IRIS_MACROS;
     }
     version += shader_content;
     *shader_content = version;
@@ -226,9 +209,7 @@ pub trait ShaderFile {
         let mut new_content = String::new();
 
         unsafe {
-            changes.sort_by(|a, b| {
-                a.range.unwrap().start.cmp(&b.range.unwrap().start)
-            });
+            changes.sort_by(|a, b| a.range.unwrap().start.cmp(&b.range.unwrap().start));
             changes.iter().for_each(|change| {
                 let range = change.range.unwrap();
 
@@ -300,7 +281,7 @@ pub struct WorkspaceFile {
     /// Currently only contains `#line` and `#version` macro
     ignored_lines: RefCell<Vec<(usize, CommentType)>>,
     /// Files that directly include this file
-    included_files: RefCell<HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>>,
+    included_files: RefCell<HashMap<Rc<PathBuf>, Rc<Self>>>,
     /// Lines and paths for include files
     including_files: RefCell<Vec<IncludeInformation>>,
     /// Shaders Files that include this file, and diagnostics related to them

@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use super::*;
 
 const SYMBOLS_QUERY_STR: &str = r#"
@@ -40,9 +42,7 @@ const SYMBOLS_QUERY_STR: &str = r#"
                  ])) @field_list)
 "#;
 
-lazy_static! {
-    static ref SYMBOLS_QUERY: Query = Query::new(tree_sitter_glsl::language(), SYMBOLS_QUERY_STR).unwrap();
-}
+static SYMBOLS_QUERY: LazyLock<Query> = LazyLock::new(|| Query::new(&tree_sitter_glsl::LANGUAGE_GLSL.into(), SYMBOLS_QUERY_STR).unwrap());
 
 // This does not need unsafe code to create another reference
 fn insert_child_symbol(parent_list: &mut Vec<DocumentSymbol>, symbol: DocumentSymbol) {
@@ -65,18 +65,16 @@ impl TreeParser {
 
         for query_match in query_cursor.matches(&SYMBOLS_QUERY, tree.root_node(), content_bytes) {
             let mut capture_iter = query_match.captures.iter();
-            let capture = match capture_iter.next() {
-                Some(capture) => capture,
-                None => continue,
+            let Some(capture) = capture_iter.next() else {
+                continue;
             };
 
-            let capture_name = SYMBOLS_QUERY.capture_names()[capture.index as usize].as_str();
+            let capture_name = SYMBOLS_QUERY.capture_names()[capture.index as usize];
 
             let (kind, node) = match capture_name {
                 "const_qualifier" => (SymbolKind::CONSTANT, capture_iter.next().unwrap().node),
                 "ident" => (SymbolKind::VARIABLE, capture.node),
-                "preproc_func_ident" => (SymbolKind::FUNCTION, capture.node),
-                "func_ident" => (SymbolKind::FUNCTION, capture.node),
+                "preproc_func_ident" | "func_ident" => (SymbolKind::FUNCTION, capture.node),
                 "define_ident" => (SymbolKind::STRING, capture.node),
                 "struct_ident" => (SymbolKind::STRUCT, capture.node),
                 "field_list" => (SymbolKind::FIELD, capture_iter.next().unwrap().node),

@@ -2,24 +2,27 @@
 name = "vscode-mcshader"
 version = "0.5.1"
 authors = ["GeForceLegend"]
-edition = "2021"
+edition = "2024"
+rust-version = "1.92.0"
 
 [dependencies]
-gl = "0.14"
-glutin = "0.29"
-hashbrown = { version = "0.12.3", features = ["default", "serde"]}
-itoa = "1.0.6"
-lazy_static = "1.4"
-regex = "1.10.3"
-serde = "1.0"
-serde_json = "1.0"
-tower-lsp = "0.19"
-tokio = { version = "1.27", features = ["full"] }
-tree-sitter = "0.20.10"
-tree-sitter-glsl = "0.1.5"
-url = "2.3"
+gl = "0.14.0"
+glutin = { version = "0.29.1", default-features = false, features = ["x11", "wayland", "wayland-dlopen"] }
+hashbrown = { version = "0.16.1", features = ["default", "serde"]}
+itoa = "1.0.17"
+regex = "1.12.2"
+serde = "1.0.228"
+serde_json = "1.0.149"
+tower-lsp = "0.20.0"
+tokio = { version = "1.49.0", features = ["rt", "rt-multi-thread", "io-std", "macros", "parking_lot"] }
+tree-sitter = "0.23.2"
+tree-sitter-glsl = "0.2.0"
+url = "2.5.8"
 
 logging = { path = "../logging" }
 logging_macro = { path = "../logging_macro" }
 
 [dev-dependencies]
+
+[lints]
+workspace = true

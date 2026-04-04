@@ -2,7 +2,7 @@
 
 vscode-mcshader is a new [Language Server](https://microsoft.github.io/language-server-protocol/) borns from [Strum355/mcshader-lsp](https://github.com/Strum355/mcshader-lsp/) with rewrited server side part, introducing lots of new LSP features that make your Minecraft shader developing experience better.
 
-This extension only supports Windows platfrom currently. You can clone this repo and build it yourself if you want it running on other platforms.
+This extension can load a platform-specific language server binary from `server/bin/<platform>-<arch>/`.
 
 ## License
 
@@ -39,8 +39,15 @@ This extension does not provide syntax highlight for GLSL yet. If you want GLSL 
 
 ## Build and use guide
 
- - Run `cargo build --release` in `/server` (require rustc and cargo installed)
- - Move the build output `/server/target/release/vscode-mcshader(.exe)` to `/server`
- - Editing line 58 of `/client/src/extension.ts` to match the output. For Windows paltform, you can simply moving the build output `/server/target/release/vscode-mcshader(.exe)` to `/server`, while on other plaforms you may also need to change the `path.join()` params (as there is no `.exe` suffix)
- - Run `vsce package` in the root path (require npm and vsce installed)
- - Open your vscode and import the output vsix
+ - Run `npm install` in the repo root
+ - Run `npm run vscode:prepublish` in the repo root
+ - This builds the Rust server in release mode and copies the output to `server/bin/<platform>-<arch>/vscode-mcshader(.exe)`
+ - Run `vsce package` in the repo root
+ - Open VS Code and install the generated `.vsix`
+
+## Multi-platform packaging
+
+ - The extension now resolves the server binary by `process.platform` and `process.arch`
+ - Example folders: `server/bin/win32-x64/`, `server/bin/linux-x64/`, `server/bin/darwin-arm64/`
+ - A single VSIX can support multiple platforms if you place every matching binary in those folders before packaging
+ - If you only package one platform binary, the VSIX will still only work on that platform

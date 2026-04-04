@@ -3,7 +3,30 @@ import * as lc from 'vscode-languageclient/node'
 import * as commands from './commands'
 import { log } from './log'
 import * as path from 'path'
+import * as fs from 'fs'
 import * as notification from './notification'
+
+type ServerBinaryInfo = {
+    platformKey: string
+    fileName: string
+}
+
+const getServerBinaryInfo = (): ServerBinaryInfo => {
+    const { platform, arch } = process
+    const extension = platform === 'win32' ? '.exe' : ''
+
+    switch (platform) {
+        case 'win32':
+        case 'linux':
+        case 'darwin':
+            return {
+                platformKey: `${platform}-${arch}`,
+                fileName: `vscode-mcshader${extension}`
+            }
+        default:
+            throw new Error(`Unsupported platform: ${platform}/${arch}`)
+    }
+}
 
 export class Extension {
     private statusBarItem: vscode.StatusBarItem | null = null
@@ -48,14 +71,42 @@ export class Extension {
         return this.languageClient
     }
 
+    private resolveServerPath = () => {
+        const { platformKey, fileName } = getServerBinaryInfo()
+        const candidates: string[] = []
+
+        if (process.env['MCSHADER_DEBUG']) {
+            const debugTarget = process.env['MCSHADER_DEBUG_TARGET']
+            if (debugTarget) {
+                candidates.push(this.extensionContext.asAbsolutePath(path.join('server', 'target', debugTarget, 'debug', fileName)))
+            }
+            candidates.push(this.extensionContext.asAbsolutePath(path.join('server', 'target', 'debug', fileName)))
+        } else {
+            candidates.push(this.extensionContext.asAbsolutePath(path.join('server', 'bin', platformKey, fileName)))
+            candidates.push(this.extensionContext.asAbsolutePath(path.join('server', fileName)))
+            if (process.platform === 'win32') {
+                candidates.push(this.extensionContext.asAbsolutePath(path.join('server', 'vscode-mcshader.exe')))
+            }
+        }
+
+        const serverPath = candidates.find((candidate) => fs.existsSync(candidate))
+        if (serverPath) {
+            return serverPath
+        }
+
+        throw new Error(
+            `Language server binary not found for ${platformKey}. ` +
+            `Expected one of:\n${candidates.map((candidate) => `- ${candidate}`).join('\n')}\n` +
+            'Build or copy the matching binary into server/bin/<platform>-<arch>/.'
+        )
+    }
+
     public activate = async (context: vscode.ExtensionContext) => {
         this.extensionContext = context
 
         log.info('starting language server...')
 
-        const serverPath = process.env['MCSHADER_DEBUG'] ?
-            this.extensionContext.asAbsolutePath(path.join('server', 'target', 'debug', 'vscode-mcshader.exe')) :
-            this.extensionContext.asAbsolutePath(path.join('server', 'vscode-mcshader.exe'))
+        const serverPath = this.resolveServerPath()
 
         const server: lc.Executable = {
             command: serverPath,

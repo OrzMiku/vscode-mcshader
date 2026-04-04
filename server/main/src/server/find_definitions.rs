@@ -1,10 +1,10 @@
 use super::*;
 
-impl MinecraftLanguageServer {
-    pub fn find_definitions(&self, params: GotoDeclarationParams) -> Option<Vec<Location>> {
+impl ServerCore {
+    pub fn find_definitions(&self, params: GotoDefinitionParams) -> Option<Vec<Location>> {
         let server_data = self.server_data.lock().unwrap();
-        let workspace_files = server_data.workspace_files.borrow();
-        let temp_files = server_data.temp_files.borrow();
+        let workspace_files = &server_data.workspace_files;
+        let temp_files = &server_data.temp_files;
 
         let file_path = params.text_document_position_params.text_document.uri.to_file_path().unwrap();
 

@@ -5,6 +5,7 @@ use url::Url;
 use crate::file::byte_index;
 
 mod definition;
+mod hover;
 mod reference;
 mod simple_lint;
 mod symbols;

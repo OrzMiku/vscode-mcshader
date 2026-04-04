@@ -1,10 +1,10 @@
 use super::*;
 
-impl MinecraftLanguageServer {
+impl ServerCore {
     pub fn list_symbols(&self, params: DocumentSymbolParams) -> Option<DocumentSymbolResponse> {
         let server_data = self.server_data.lock().unwrap();
-        let workspace_files = server_data.workspace_files.borrow();
-        let temp_files = server_data.temp_files.borrow();
+        let workspace_files = &server_data.workspace_files;
+        let temp_files = &server_data.temp_files;
 
         let file_path = params.text_document.uri.to_file_path().unwrap();
 

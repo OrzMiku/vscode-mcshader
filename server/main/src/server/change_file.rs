@@ -1,39 +1,46 @@
 use super::*;
 
-impl MinecraftLanguageServer {
+impl ServerCore {
     pub fn change_file(&self, url: Url, changes: Vec<TextDocumentContentChangeEvent>) -> Option<Diagnostics> {
         let file_path = url.to_file_path().unwrap();
 
-        let server_data = self.server_data.lock().unwrap();
-        let mut parser = server_data.tree_sitter_parser.borrow_mut();
-        let mut workspace_files = server_data.workspace_files.borrow_mut();
-        let mut temp_files = server_data.temp_files.borrow_mut();
-        let temp_lint = server_data.temp_lint.borrow();
+        let mut server_data = self.server_data.lock().unwrap();
+        let temp_lint = server_data.temp_lint;
+        let ServerData {
+            tree_sitter_parser: parser,
+            workspace_files,
+            temp_files,
+            ..
+        } = &mut *server_data;
 
         let diagnostics = if let Some((file_path, workspace_file)) = workspace_files.get_key_value(&file_path) {
-            workspace_file.apply_edit(changes, &mut parser);
+            workspace_file.apply_edit(changes, parser);
             // Clone the content so they can be used alone.
             let file_path = file_path.clone();
             let workspace_file = workspace_file.clone();
             let mut update_list = HashMap::new();
 
             WorkspaceFile::parse_content(
-                &mut workspace_files,
-                &mut temp_files,
-                &mut parser,
+                workspace_files,
+                temp_files,
+                parser,
                 &mut update_list,
                 &workspace_file,
                 &file_path,
                 1,
             );
+            let shader_files = workspace_file.parent_shaders().borrow();
+            shader_files.iter().for_each(|(shader_path, shader_file)| {
+                self.lint_workspace_shader(shader_file, shader_path, &mut update_list);
+            });
             self.collect_diagnostics(&update_list)
         } else {
             let temp_file = temp_files.get(&file_path)?;
-            temp_file.apply_edit(changes, &mut parser);
+            temp_file.apply_edit(changes, parser);
             temp_file.parse_includes(&file_path);
             let file_type = *temp_file.file_type().borrow();
             if file_type == gl::INVALID_ENUM || file_type == gl::NONE {
-                let diagnostics = if *temp_lint {
+                let diagnostics = if temp_lint {
                     TreeParser::simple_lint(
                         &temp_file.tree().borrow(),
                         &temp_file.content().borrow(),
@@ -48,7 +55,7 @@ impl MinecraftLanguageServer {
             }
         };
 
-        self.collect_memory(&mut workspace_files);
+        self.collect_memory(workspace_files);
         Some(diagnostics)
     }
 }

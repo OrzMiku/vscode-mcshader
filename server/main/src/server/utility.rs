@@ -1,8 +1,9 @@
+use std::rc::Rc;
 use std::result;
 
 use super::*;
 
-impl MinecraftLanguageServer {
+impl ServerCore {
     pub(super) fn collect_memory(&self, workspace_files: &mut HashMap<Rc<PathBuf>, Rc<WorkspaceFile>>) {
         workspace_files.retain(|_file_path, workspace_file| {
             // Only delete file that both do not exist and no file includes it.
@@ -270,14 +271,17 @@ impl MinecraftLanguageServer {
     }
 
     pub(super) fn initial_scan(&self, roots: Vec<PathBuf>) {
-        let server_data = self.server_data.lock().unwrap();
-        let mut parser = server_data.tree_sitter_parser.borrow_mut();
-        let mut shader_packs = server_data.shader_packs.borrow_mut();
-        let mut workspace_files = server_data.workspace_files.borrow_mut();
-        let mut temp_files = server_data.temp_files.borrow_mut();
+        let mut server_data = self.server_data.lock().unwrap();
+        let ServerData {
+            tree_sitter_parser: parser,
+            shader_packs,
+            workspace_files,
+            temp_files,
+            ..
+        } = &mut *server_data;
 
         for root in roots {
-            self.scan_files_in_root(&mut parser, &mut shader_packs, &mut workspace_files, &mut temp_files, root);
+            self.scan_files_in_root(parser, shader_packs, workspace_files, temp_files, root);
         }
     }
 }

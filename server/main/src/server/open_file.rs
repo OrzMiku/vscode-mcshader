@@ -1,13 +1,18 @@
 use super::*;
 
-impl MinecraftLanguageServer {
-    pub fn open_file(&self, params: DidOpenTextDocumentParams) {
+impl ServerCore {
+    pub fn open_file(&self, params: DidOpenTextDocumentParams) -> Option<Diagnostics> {
         let file_path = params.text_document.uri.to_file_path().unwrap();
+        let file_url = params.text_document.uri.clone();
 
-        let server_data = self.server_data.lock().unwrap();
-        let mut parser = server_data.tree_sitter_parser.borrow_mut();
-        let mut workspace_files = server_data.workspace_files.borrow_mut();
-        let mut temp_files = server_data.temp_files.borrow_mut();
+        let mut server_data = self.server_data.lock().unwrap();
+        let temp_lint = server_data.temp_lint;
+        let ServerData {
+            tree_sitter_parser: parser,
+            workspace_files,
+            temp_files,
+            ..
+        } = &mut *server_data;
 
         if let Some((file_path, workspace_file)) = workspace_files.get_key_value(&file_path) {
             let content = params.text_document.text;
@@ -21,17 +26,28 @@ impl MinecraftLanguageServer {
             let mut update_list = HashMap::new();
 
             WorkspaceFile::parse_content(
-                &mut workspace_files,
-                &mut temp_files,
-                &mut parser,
+                workspace_files,
+                temp_files,
+                parser,
                 &mut update_list,
                 &workspace_file,
                 &file_path,
                 1,
             );
+            let shader_files = workspace_file.parent_shaders().borrow();
+            shader_files.iter().for_each(|(shader_path, shader_file)| {
+                self.lint_workspace_shader(shader_file, shader_path, &mut update_list);
+            });
+
+            self.collect_memory(workspace_files);
+            Some(self.collect_diagnostics(&update_list))
         } else {
-            let temp_file = TempFile::new(&mut parser, &file_path, params.text_document.text);
+            let temp_file = TempFile::new(parser, &file_path, params.text_document.text);
             temp_files.insert(file_path, temp_file);
+            self.collect_memory(workspace_files);
+            temp_files
+                .get(&file_url.to_file_path().unwrap())
+                .map(|temp_file| self.lint_temp_file(temp_file, &file_url.to_file_path().unwrap(), file_url, temp_lint))
         }
     }
 }

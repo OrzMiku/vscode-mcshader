@@ -1,26 +1,29 @@
 use super::*;
 
-impl MinecraftLanguageServer {
+impl ServerCore {
     pub fn close_file(&self, file_url: Url) -> Option<Diagnostics> {
         let file_path = file_url.to_file_path().unwrap();
 
-        let server_data = self.server_data.lock().unwrap();
-        let mut parser = server_data.tree_sitter_parser.borrow_mut();
-        let mut workspace_files = server_data.workspace_files.borrow_mut();
-        let mut temp_files = server_data.temp_files.borrow_mut();
+        let mut server_data = self.server_data.lock().unwrap();
+        let ServerData {
+            tree_sitter_parser: parser,
+            workspace_files,
+            temp_files,
+            ..
+        } = &mut *server_data;
 
         // Force closing may result in temp changes discarded, so the content should reset to the disc copy.
         let diagnostics = if let Some((file_path, workspace_file)) = workspace_files.get_key_value(&file_path) {
-            workspace_file.update_from_disc(&mut parser, file_path);
+            workspace_file.update_from_disc(parser, file_path);
             // Clone the content so they can be used alone.
             let file_path = file_path.clone();
             let workspace_file = workspace_file.clone();
             let mut update_list = HashMap::new();
 
             WorkspaceFile::parse_content(
-                &mut workspace_files,
-                &mut temp_files,
-                &mut parser,
+                workspace_files,
+                temp_files,
+                parser,
                 &mut update_list,
                 &workspace_file,
                 &file_path,
@@ -38,7 +41,7 @@ impl MinecraftLanguageServer {
             temp_files.remove(&file_path).map(|_| HashMap::from([(file_url, vec![])]))
         };
 
-        self.collect_memory(&mut workspace_files);
+        self.collect_memory(workspace_files);
         diagnostics
     }
 }

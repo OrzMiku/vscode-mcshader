@@ -1,12 +1,15 @@
 use super::*;
 
-impl MinecraftLanguageServer {
+impl ServerCore {
     pub fn update_workspaces(&self, events: WorkspaceFoldersChangeEvent) -> Diagnostics {
-        let server_data = self.server_data.lock().unwrap();
-        let mut parser = server_data.tree_sitter_parser.borrow_mut();
-        let mut shader_packs = server_data.shader_packs.borrow_mut();
-        let mut workspace_files = server_data.workspace_files.borrow_mut();
-        let mut temp_files = server_data.temp_files.borrow_mut();
+        let mut server_data = self.server_data.lock().unwrap();
+        let ServerData {
+            tree_sitter_parser: parser,
+            shader_packs,
+            workspace_files,
+            temp_files,
+            ..
+        } = &mut *server_data;
 
         let mut diagnostics: Diagnostics = HashMap::new();
         for removed_workspace in &events.removed {
@@ -23,7 +26,7 @@ impl MinecraftLanguageServer {
 
         for added_workspace in events.added {
             let added_path = added_workspace.uri.to_file_path().unwrap();
-            self.scan_files_in_root(&mut parser, &mut shader_packs, &mut workspace_files, &mut temp_files, added_path);
+            self.scan_files_in_root(parser, shader_packs, workspace_files, temp_files, added_path);
         }
         diagnostics
     }

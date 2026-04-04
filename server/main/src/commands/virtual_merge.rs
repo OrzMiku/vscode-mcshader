@@ -19,8 +19,8 @@ impl Command for VirtualMerge {
         #[cfg(not(target_os = "windows"))]
         let file_path = PathBuf::from(file_uri);
 
-        let workspace_files = server_data.workspace_files().borrow();
-        let temp_files = server_data.temp_files().borrow();
+        let workspace_files = &server_data.workspace_files;
+        let temp_files = &server_data.temp_files;
 
         let content = if let Some((file_path, workspace_file)) = workspace_files.get_key_value(&file_path) {
             match *workspace_file.file_type().borrow() {

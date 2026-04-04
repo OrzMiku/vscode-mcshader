@@ -71,10 +71,10 @@ fn rename_file(
     };
 }
 
-impl MinecraftLanguageServer {
+impl ServerCore {
     pub fn rename_files(&self, params: RenameFilesParams) -> WorkspaceEdit {
-        let server_data = self.server_data.lock().unwrap();
-        let workspace_files = server_data.workspace_files.borrow_mut();
+        let mut server_data = self.server_data.lock().unwrap();
+        let workspace_files = &mut server_data.workspace_files;
 
         let mut changes = std::collections::HashMap::new();
 

@@ -1,13 +1,19 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use super::*;
 
-impl MinecraftLanguageServer {
+impl ServerCore {
     pub fn update_watched_files(&self, changes: &[FileEvent]) -> Diagnostics {
-        let server_data = self.server_data.lock().unwrap();
-        let mut parser = server_data.tree_sitter_parser.borrow_mut();
-        let mut workspace_files = server_data.workspace_files.borrow_mut();
-        let mut temp_files = server_data.temp_files.borrow_mut();
-        let shader_packs = server_data.shader_packs.borrow();
-        let extensions = server_data.extensions.borrow();
+        let mut server_data = self.server_data.lock().unwrap();
+        let shader_packs = server_data.shader_packs.clone();
+        let extensions = server_data.extensions.clone();
+        let ServerData {
+            tree_sitter_parser: parser,
+            workspace_files,
+            temp_files,
+            ..
+        } = &mut *server_data;
 
         let mut updated_shaders = HashMap::new();
         let mut update_list = HashMap::new();
@@ -37,7 +43,7 @@ impl MinecraftLanguageServer {
                                 .iter()
                                 .map(|(path, file)| (path.clone(), file.clone())),
                         );
-                        workspace_file.clear(&mut parser, file_path, &mut update_list);
+                        workspace_file.clear(parser, file_path, &mut update_list);
                         update_list.insert(file_path.clone(), workspace_file.clone());
                         updated_shaders.remove(file_path);
                     }
@@ -53,7 +59,7 @@ impl MinecraftLanguageServer {
                                     .iter()
                                     .map(|(path, file)| (path.clone(), file.clone())),
                             );
-                            workspace_file.clear(&mut parser, file_path, &mut update_list);
+                            workspace_file.clear(parser, file_path, &mut update_list);
                             // There might be some include files inserting deleted shader into update list before the shaders get deleted in later loop.
                             updated_shaders.remove(file_path);
                             update_list.insert(file_path.clone(), workspace_file.clone());
@@ -91,8 +97,8 @@ impl MinecraftLanguageServer {
                     }
                     None if change_type == FileChangeType::CREATED => {
                         if let Some((pack_path, file_type)) = is_valid_shader {
-                            let file_path = Rc::new(file_path);
-                            let new_shader = Rc::new(WorkspaceFile::new(&mut parser, file_type, pack_path));
+                            let file_path = std::rc::Rc::new(file_path);
+                            let new_shader = std::rc::Rc::new(WorkspaceFile::new(parser, file_type, pack_path));
                             new_shader
                                 .parent_shaders()
                                 .borrow_mut()
@@ -106,14 +112,14 @@ impl MinecraftLanguageServer {
                     }
                     _ => continue,
                 };
-                workspace_file.update_from_disc(&mut parser, &file_path);
+                workspace_file.update_from_disc(parser, &file_path);
 
                 // Clone the content so they can be used alone.
                 let workspace_file = workspace_file.clone();
                 WorkspaceFile::parse_content(
-                    &mut workspace_files,
-                    &mut temp_files,
-                    &mut parser,
+                    workspace_files,
+                    temp_files,
+                    parser,
                     &mut update_list,
                     &workspace_file,
                     &file_path,
@@ -135,7 +141,7 @@ impl MinecraftLanguageServer {
         }
         let diagnostics = self.collect_diagnostics(&update_list);
 
-        self.collect_memory(&mut workspace_files);
+        self.collect_memory(workspace_files);
         diagnostics
     }
 }

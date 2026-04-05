@@ -12,15 +12,37 @@ impl OpenGlContext {
     pub fn new() -> Self {
         #[cfg(target_os = "windows")]
         use glutin::platform::windows::EventLoopBuilderExtWindows;
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "netbsd",
+            target_os = "openbsd"
+        ))]
+        use glutin::platform::unix::EventLoopBuilderExtUnix;
 
-        #[cfg(target_os = "windows")]
+        #[cfg(any(
+            target_os = "windows",
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "netbsd",
+            target_os = "openbsd"
+        ))]
         let events_loop = {
             let mut builder = glutin::event_loop::EventLoopBuilder::new();
             builder.with_any_thread(true);
             builder.build()
         };
 
-        #[cfg(not(target_os = "windows"))]
+        #[cfg(not(any(
+            target_os = "windows",
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "netbsd",
+            target_os = "openbsd"
+        )))]
         let events_loop = glutin::event_loop::EventLoop::new();
 
         let not_current_context = glutin::ContextBuilder::new()

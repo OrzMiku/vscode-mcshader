@@ -188,6 +188,28 @@ pub trait ShaderFile {
     fn line_mapping(&self) -> &RefCell<Vec<usize>>;
     fn include_links(&self) -> Vec<DocumentLink>;
 
+    fn include_definition(&self, position: Position) -> Option<Location> {
+        self.include_links().into_iter().find_map(|link| {
+            let range = link.range;
+            let is_after_start =
+                position.line > range.start.line || (position.line == range.start.line && position.character >= range.start.character);
+            let is_before_end =
+                position.line < range.end.line || (position.line == range.end.line && position.character <= range.end.character);
+
+            if is_after_start && is_before_end {
+                link.target.map(|uri| Location {
+                    uri,
+                    range: Range {
+                        start: Position::new(0, 0),
+                        end: Position::new(0, 0),
+                    },
+                })
+            } else {
+                None
+            }
+        })
+    }
+
     fn update_from_disc(&self, parser: &mut Parser, file_path: &Path) -> bool {
         if let Ok(content) = read_to_string(file_path) {
             *self.tree().borrow_mut() = parser.parse(&content, None).unwrap();

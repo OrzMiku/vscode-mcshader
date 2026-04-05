@@ -44,9 +44,7 @@ impl ServerWorker {
             }))
             .expect("language server worker channel closed unexpectedly");
 
-        reply_rx
-            .await
-            .expect("language server worker stopped before replying")
+        reply_rx.await.expect("language server worker stopped before replying")
     }
 }
 

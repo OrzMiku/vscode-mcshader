@@ -10,8 +10,6 @@ pub struct OpenGlContext {
 
 impl OpenGlContext {
     pub fn new() -> Self {
-        #[cfg(target_os = "windows")]
-        use glutin::platform::windows::EventLoopBuilderExtWindows;
         #[cfg(any(
             target_os = "linux",
             target_os = "dragonfly",
@@ -20,6 +18,8 @@ impl OpenGlContext {
             target_os = "openbsd"
         ))]
         use glutin::platform::unix::EventLoopBuilderExtUnix;
+        #[cfg(target_os = "windows")]
+        use glutin::platform::windows::EventLoopBuilderExtWindows;
 
         #[cfg(any(
             target_os = "windows",

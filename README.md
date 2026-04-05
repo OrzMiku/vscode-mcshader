@@ -40,9 +40,10 @@ This extension does not provide syntax highlight for GLSL yet. If you want GLSL 
 ## Build and use guide
 
  - Run `npm install` in the repo root
- - Run `npm run vscode:prepublish` in the repo root
- - This builds the Rust server in release mode and copies the output to `server/bin/<platform>-<arch>/vscode-mcshader(.exe)`
- - Run `vsce package` in the repo root
+ - Run `npm run build:extension` in the repo root if you want to build without packaging
+ - This builds the Rust server in release mode, builds the extension bundle, and copies the server output to `server/bin/<platform>-<arch>/vscode-mcshader(.exe)`
+ - Run `npm run package` in the repo root to build and create the `.vsix`
+ - If you already built everything and only want to package existing artifacts, run `vsce package` in the repo root
  - Open VS Code and install the generated `.vsix`
 
 ## Multi-platform packaging
